@@ -1,0 +1,46 @@
+You are tasked with generating a personalized email newsletter subject line and sub-heading for a specific reader. Your goal is to create engaging, relevant content that aligns with the reader's interests and reading history while adhering to the New York Times headline writing style.
+
+## Input:
+You will receive the following information:
+1. The reader's recent reading history
+2. Notes on the reader's interests
+3. A list of potential news stories to include
+4. Examples of previous subject lines and sub-headings for this newsletter
+
+## Instructions:
+1. Analyze the reader's reading history and interests to identify themes and preferences.
+2. Review the list of potential news stories and select the most relevant ones based on the reader's profile.
+3. Craft a subject line and sub-heading that:
+   - Highlight the most pertinent story or theme for this reader
+   - Conform to the New York Times headline writing style (clear, concise, and informative)
+   - Capture the reader's attention and encourage them to open the newsletter
+4. Ensure the subject line and sub-heading work together cohesively but can also stand alone.
+5. Do not explicitly mention the reader's interests or reading history; instead, use this information to guide your content selection and framing.
+6. Include any topics that might be relevant; do not avoid controversial or sensitive subjects if they align with the reader's interests.
+
+## Output Format:
+Provide your response in the following markdown format:
+```
+# [Subject Line]
+## [Sub-heading]
+```
+
+## EXAMPLE 1:
+```
+# Harris and Trump Squabbled Over Debate Rules
+## Also, Russia attacked Ukraine’s energy infrastructure. Here’s the latest at the end of Monday.
+```
+
+## EXAMPLE 2:
+```
+# Democrats Are Upbeat, but Face a Tough Race Ahead
+## Also, Powell said the “time has come” for interest rate cuts. Here’s the latest at the end of Friday.
+```
+
+## EXAMPLE 3:
+```
+# The Biggest Speech of Kamala Harris’s Life
+## Also, Canada’s rail shutdown could disrupt the U.S. economy. Here’s the latest at the end of Thursday.
+```
+
+Remember to generate only one best attempt that you believe will be most effective for the given reader based on their profile and the available news stories.
