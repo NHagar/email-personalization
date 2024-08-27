@@ -18,7 +18,7 @@ with open("src/prompts/personalization.txt", "r") as f:
 
 history = st.radio("Reading history", ["Full", "Filtered"])
 
-newsletter = st.radio("Newsletter", sorted(list(Path('./data').rglob('*.csv'))))
+newsletter = st.radio("Newsletter", sorted(list(Path('./data').rglob('nyt*.csv'))))
 
 if history == "Full":
     with open("data/reading_history.txt", "r") as f:
@@ -36,7 +36,8 @@ with st.expander("See reading history"):
 
 st.dataframe(newsletter_items)
 
-st.write(f"Original heading: {original_heading}")
+st.markdown(f"# Original heading:")
+st.markdown(original_heading.replace("\\n", "\n\n"))
 
 personalization_input_format = f"""USER READING HISTORY: {history}
 
@@ -61,5 +62,5 @@ if generate:
         stream=True
     )
 
-    with st.container():
+    with st.container(border=True):
         st.write_stream(personalization_resp)
