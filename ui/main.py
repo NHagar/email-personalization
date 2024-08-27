@@ -29,29 +29,37 @@ else:
 
 newsletter_items = con.execute(f"SELECT *, 'HEADLINE: ' || headline || '\nDESCRIPTION: ' || description AS formatted FROM '{newsletter}' WHERE headline != 'SKIP'").fetch_df()
 
+original_heading = con.execute(f"SELECT heading FROM 'data/emails/original_headings.csv' WHERE fpath = '{newsletter}';").fetch_df().iloc[0, 0]
+
 with st.expander("See reading history"):
     st.code(history)
 
 st.dataframe(newsletter_items)
+
+st.write(f"Original heading: {original_heading}")
 
 personalization_input_format = f"""USER READING HISTORY: {history}
 
 NEWSLETTER ITEMS: {'\n'.join(newsletter_items.formatted.tolist())}
 """
 
-personalization_resp = llm.chat.completions.create(
-    model="gpt-4o-mini",
-    messages=[
-        {
-            "role": "system",
-            "content": prompt_personalization
-        },
-        {
-            "role": "user",
-            "content": personalization_input_format
-        }
-    ],
-    stream=True
-)
+generate = st.button("Generate Personalization")
 
-st.write_stream(personalization_resp)
+if generate:
+    personalization_resp = llm.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {
+                "role": "system",
+                "content": prompt_personalization
+            },
+            {
+                "role": "user",
+                "content": personalization_input_format
+            }
+        ],
+        stream=True
+    )
+
+    with st.container():
+        st.write_stream(personalization_resp)
