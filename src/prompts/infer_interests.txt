@@ -1,0 +1,1 @@
+You will be given a list of news articles that someone has read recently. Based on these articles, please provide a brief description of the kinds of topics and themes that this user is likely interested in. 
