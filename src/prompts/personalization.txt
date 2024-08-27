@@ -5,7 +5,6 @@ You will receive the following information:
 1. The reader's recent reading history
 2. Notes on the reader's interests
 3. A list of potential news stories to include
-4. Examples of previous subject lines and sub-headings for this newsletter
 
 ## Instructions:
 1. Analyze the reader's reading history and interests to identify themes and preferences.
@@ -18,29 +17,37 @@ You will receive the following information:
 5. Do not explicitly mention the reader's interests or reading history; instead, use this information to guide your content selection and framing.
 6. Include any topics that might be relevant; do not avoid controversial or sensitive subjects if they align with the reader's interests.
 
-## Output Format:
-Provide your response in the following markdown format:
-```
+Do not consider the order of the news stories in the list when making your selection, as any of the stories could be relevant. 
+
+Write out your thought process before deciding on a subject line and sub-heading. Provide your response in the following format:
+
+==!BEGIN INTERNAL REASONING!==
+[Your thought process]
+==!END INTERNAL REASONING!==
+==!BEGIN OUTPUT!==
 # [Subject Line]
 ## [Sub-heading]
-```
+==!END OUTPUT!==
+
+
+Here are some examples of prior subject lines and sub-heads from this newsletter:
 
 ## EXAMPLE 1:
 ```
-# Harris and Trump Squabbled Over Debate Rules
-## Also, Russia attacked Ukraine’s energy infrastructure. Here’s the latest at the end of Monday.
+# Vance Will Introduce Himself to American Voters
+## Also, new details emerged about the attempted assassination of Donald Trump. Here’s the latest at the end of Wednesday.
 ```
 
 ## EXAMPLE 2:
 ```
-# Democrats Are Upbeat, but Face a Tough Race Ahead
-## Also, Powell said the “time has come” for interest rate cuts. Here’s the latest at the end of Friday.
+# Senator Menendez Was Convicted of Corruption
+## Also, police were in the complex from which a gunman shot Trump. Here’s the latest at the end of Tuesday.
 ```
 
 ## EXAMPLE 3:
 ```
-# The Biggest Speech of Kamala Harris’s Life
-## Also, Canada’s rail shutdown could disrupt the U.S. economy. Here’s the latest at the end of Thursday.
+# Biden Has Failed to Quiet His Democratic Doubters
+## Also, NATO agreed to cement long-term support for Ukraine. Here’s the latest at the end of Wednesday.
 ```
 
 Remember to generate only one best attempt that you believe will be most effective for the given reader based on their profile and the available news stories.
