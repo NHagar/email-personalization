@@ -3,8 +3,7 @@ You are tasked with generating a personalized email newsletter subject line and 
 ## Input:
 You will receive the following information:
 1. The reader's recent reading history
-2. Notes on the reader's interests
-3. A list of potential news stories to include
+2. A list of potential news stories to include
 
 ## Instructions:
 1. Analyze the reader's reading history and interests to identify themes and preferences.
