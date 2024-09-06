@@ -1,29 +1,56 @@
-# 4 prompt components:
-    # 1. Instructions
-    # 2. Persona
-    # 3. Reading history (if available)
-    # 4. Candidate stories
-
-# %%
 import datetime
+import os
 
 import duckdb
 from openai import OpenAI
 
+from tqdm import tqdm
 from dotenv import load_dotenv
 
 load_dotenv()
 
 llm = OpenAI()
+with open("./src/prompts/persona_history.txt", "r") as f:
+    prompt_history = f.read()
 
-# %%
 con = duckdb.connect(":memory:")
 
-start_date = datetime.date(2024, 5, 1)
-end_date = datetime.date(2024, 7, 31)
-date_list = [(start_date + datetime.timedelta(days=x)).strftime('%Y-%m-%d') for x in range((end_date - start_date).days + 1)]
+def process_all_dates(persona):
+    start_date = datetime.date(2024, 5, 1)
+    end_date = datetime.date(2024, 7, 31)
+    date_list = [(start_date + datetime.timedelta(days=x)).strftime('%Y-%m-%d') for x in range((end_date - start_date).days + 1)]
 
-for i in range(len(date_list)):
-    curr = date_list[i]
-    nex = date_list[i+1] if i+1 < len(date_list) else "2024-08-01"
-    headlines = con.execute(f"SELECT headline FROM '../data/nyt_archive_all.parquet' WHERE pub_date >= '{curr}' AND pub_date < '{next}' ").fetchdf().headline.tolist()
+    # check if persona memory file exists
+    memory_path = f"./data/memories/{persona}.txt"
+    if os.path.exists(memory_path):
+        with open(memory_path, "r") as f:
+            memory = f"STORIES READ:\n{f.read()}"
+    else:
+        # set blank memory and create file
+        memory = ""
+        with open(memory_path, "w") as f:
+            f.write(memory)
+
+
+    for i in tqdm(range(len(date_list))):
+        curr = date_list[i]
+        nex = date_list[i+1] if i+1 < len(date_list) else "2024-08-01"
+        headlines = "\n".join(con.execute(f"SELECT headline FROM '../data/nyt_archive_all.parquet' WHERE pub_date >= '{curr}' AND pub_date < '{next}' ").fetchdf().headline.tolist())
+
+        user_input = f"PERSONA:\n{persona}\n{memory}\nHEADLINES:\n{headlines}"
+
+        resp = llm.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": prompt_history},
+                {"role": "user", "content": user_input}
+            ]
+        )
+
+        selections = resp.choices[0].message.content
+
+        # save selections to memory
+        with open(memory_path, "a") as f:
+            f.write(selections)
+
+        memory += f"\n{selections}"

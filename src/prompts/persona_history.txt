@@ -7,3 +7,6 @@ Adhere to the Persona: Prioritize articles that fit the reading habits and inter
 Consider Reading History: If a history of previously selected headlines is provided, use this to inform your choices, selecting headlines that are consistent with or complement the types of articles you have read before.
 
 Avoid Distractions: If your persona dislikes jumping between topics or deep dives into lengthy pieces, avoid selecting headlines that would contradict these preferences.
+
+
+Return just the list of headlines you would read, as a newline-separated string. Do not include any additional information.
