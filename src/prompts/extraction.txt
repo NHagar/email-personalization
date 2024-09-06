@@ -10,3 +10,54 @@ Make sure to:
 
 Extract only valid news stories (ignore sections like "Editor’s Note" or general information about the newsletter).
 Ensure the descriptions are concise but provide the necessary context for each story.
+
+Pay careful attention to chunks that might have both a list of URLs and a story. For example, in this chunk:
+
+## More top news
+
+  * **Supreme Court:** Justice Clarence Thomas [failed to publicly disclose additional private travel](https://www.nytimes.com/2024/08/05/us/politics/clarence-thomas-harlan-crow-private-jet.html) provided by a wealthy conservative donor, a top Democratic senator said.
+
+  * **Weather:** Tropical Storm Debby [pushed into southern Georgia this afternoon](https://www.nytimes.com/live/2024/weather/hurricane-debby-florida-storm?smid=url-share#key-things-to-watch-as-debby-moves-through-the-southeast-in-the-next-day), slowing down after making landfall on in Florida and killing at least four people.
+
+  * **U.K.:** Violent anti-immigration riots continued over the weekend, with [vandalism, looting and attacks on police officers](https://www.nytimes.com/2024/08/04/world/europe/uk-protests-southport-stabbing.html) in several cities.
+
+  * **Politics:** Robert F. Kennedy, Jr. admitted that he [left a dead bear cub in Central Park in Manhattan because he thought it would be “amusing.”](https://www.nytimes.com/2024/08/04/us/politics/robert-f-kennedy-jr-bear-central-park.html)
+
+  * **Ukraine:** President Volodymyr Zelensky said that his military had [received a first batch of F-16 fighter jets](https://www.nytimes.com/2024/08/04/world/europe/ukraine-f-16-fighter-jets.html).
+
+  * **South Korea:** Citing a shrinking economy, some influential companies have [told executives to start working six days a week](https://www.nytimes.com/2024/08/05/business/south-korea-labor-workweek.html).
+
+### **TIME TO UNWIND**
+
+Image
+
+Flavor Flav, America’s newest water polo superfan.Credit...Gabriela Bhaskar
+for The New York Times
+
+## Flavor Flav’s water polo party
+
+The rapper Flavor Flav has become a self-appointed hype man and benefactor to
+the U.S. women’s water polo team at the Paris Olympics, promoting the
+athletes’ accomplishments on social media and persuading celebrities to attend
+matches.
+
+The goal, he said, is to expose the players to new audiences, capitalizing on
+both the Games and [the current era of excitement for other women’s
+sports](https://www.nytimes.com/2024/08/05/world/olympics/flavor-flav-water-
+polo.html).
+
+**More on the Olympics:** Simone Biles [took home silver in the floor
+exercise](https://www.nytimes.com/live/2024/08/05/world/olympics-gymnastics-
+beam-floor-biles), the last gymnastics event of the Games. [Here’s what to
+watch](https://www.nytimes.com/athletic/5679259/2024/08/05/olympics-2024-watch-
+guide-day-10-gymnastics-track-surfing/).
+
+
+You should extract the following details:
+
+Headline: Flavor Flav’s water polo party
+URL: https://www.nytimes.com/2024/08/05/world/olympics/flavor-flav-water-polo.html
+Description: The rapper Flavor Flav has become a self-appointed hype man and benefactor to
+the U.S. women’s water polo team at the Paris Olympics, promoting the
+athletes’ accomplishments on social media and persuading celebrities to attend
+matches.
