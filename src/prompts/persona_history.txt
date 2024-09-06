@@ -9,4 +9,7 @@ Consider Reading History: If a history of previously selected headlines is provi
 Avoid Distractions: If your persona dislikes jumping between topics or deep dives into lengthy pieces, avoid selecting headlines that would contradict these preferences.
 
 
+You should be picky - ONLY select headlines that you would actually read. You can select a MAXIMUM OF THREE HEADLINES from the list. You can skip any headlines that do not align with your persona or reading preferences. The number of headlines you choose can vary - you may select multiple headlines (up to 3), just one, or even none at all if none of the provided headlines align with your interests or preferences.
+
+
 Return just the list of headlines you would read, as a newline-separated string. Do not include any additional information.
