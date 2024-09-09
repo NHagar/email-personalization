@@ -1,7 +1,9 @@
+import random
 from pathlib import Path
 
 import duckdb
 import openai
+import pandas as pd
 import streamlit as st
 
 from personalization_eval import get_persona_preference
@@ -67,19 +69,21 @@ if generate:
     with st.container(border=True):
         personalized = st.write_stream(personalization_resp)
 
+        generated_headline = personalized.split("==!BEGIN OUTPUT!==\n")[-1].replace("\n==!END OUTPUT!==", "")
 
-evaluate = st.button("Evaluate Personalization")
+        # get list of personas
+        personas = sorted(list(Path('./src/prompts/personas').rglob('*.txt')))
+        # extract just the name of the persona
+        personas = [p.stem for p in personas]
 
-if evaluate:
-    # extract generated headline from personalized
-    generated_headline = personalized.choices[0].message.content.split("\n")[0]
+        test = personas[0]
 
+        choices = [original_heading, generated_headline]
+        # randomize choices
+        random.shuffle(choices)
 
-    # get list of personas
-    personas = sorted(list(Path('./src/prompts/personas').rglob('*.txt')))
-    # extract just the name of the persona
-    personas = [p.stem for p in personas]
+        pref = get_persona_preference(test, choices[0], choices[1])
 
-    test = personas[0]
+        df = pd.DataFrame({"persona": [test], "choice_1": [choices[0]], "choice_2": [choices[1]], "preference": [pref]})
 
-    persona = st.selectbox("Persona", personas)
+        st.dataframe(df)
