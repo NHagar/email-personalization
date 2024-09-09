@@ -4,6 +4,8 @@ import duckdb
 import openai
 import streamlit as st
 
+from personalization_eval import get_persona_preference
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -18,7 +20,7 @@ with open("src/prompts/personalization.txt", "r") as f:
 
 history = st.radio("Reading history", ["Full", "Filtered"])
 
-newsletter = st.radio("Newsletter", sorted(list(Path('./data').rglob('nyt*.csv'))))
+newsletter = st.radio("Newsletter", sorted(list(Path('./data/emails').rglob('*.csv'))))
 
 if history == "Full":
     with open("data/reading_history.txt", "r") as f:
@@ -29,7 +31,7 @@ else:
 
 newsletter_items = con.execute(f"SELECT *, 'HEADLINE: ' || headline || '\nDESCRIPTION: ' || description AS formatted FROM '{newsletter}' WHERE headline != 'SKIP'").fetch_df()
 
-original_heading = con.execute(f"SELECT heading FROM 'data/emails/original_headings.csv' WHERE fpath = '{newsletter}';").fetch_df().iloc[0, 0]
+original_heading = con.execute(f"SELECT '# ' || newsletter_headline || '\n\n' || '## ' || newsletter_sub_hed AS heading FROM '{newsletter}' ").fetch_df().iloc[0, 0]
 
 with st.expander("See reading history"):
     st.code(history)
@@ -63,4 +65,16 @@ if generate:
     )
 
     with st.container(border=True):
-        st.write_stream(personalization_resp)
+        personalized = st.write_stream(personalization_resp)
+
+
+evaluate = st.button("Evaluate Personalization")
+
+if evaluate:
+    ""
+    # get list of personas
+    personas = sorted(list(Path('./src/prompts/personas').rglob('*.txt')))
+    # extract just the name of the persona
+    personas = [p.stem for p in personas]
+
+    persona = st.selectbox("Persona", personas)
