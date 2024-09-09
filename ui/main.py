@@ -71,10 +71,15 @@ if generate:
 evaluate = st.button("Evaluate Personalization")
 
 if evaluate:
-    ""
+    # extract generated headline from personalized
+    generated_headline = personalized.choices[0].message.content.split("\n")[0]
+
+
     # get list of personas
     personas = sorted(list(Path('./src/prompts/personas').rglob('*.txt')))
     # extract just the name of the persona
     personas = [p.stem for p in personas]
+
+    test = personas[0]
 
     persona = st.selectbox("Persona", personas)
