@@ -14,6 +14,9 @@ with open("src/prompts/infer_interests.txt", "r") as f:
 with open("src/prompts/item_ranking.txt", "r") as f:
     prompt_ranking = f.read()
 
+with open("src/prompts/framing.txt", "r") as f:
+    prompt_framing = f.read()
+
 
 llm = openai.OpenAI()
 
@@ -91,5 +94,23 @@ if generate_reasoning:
         stream=True
     )
 
-    with st.container(border=True):
-        st.write_stream(ranking_resp)
+    notes = st.write_stream(ranking_resp)
+
+    formatted_input = f"""USER NOTES: {user_notes}\n\nSTORIES: {notes.split('3.')[0]}"""
+
+    framing_resp = llm.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {
+                "role": "system",
+                "content": prompt_framing
+            },
+            {
+                "role": "user",
+                "content": formatted_input
+            }
+        ],
+        stream=True
+    )
+
+    st.write_stream(framing_resp)
