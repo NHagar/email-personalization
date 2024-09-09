@@ -91,15 +91,16 @@ if generate_reasoning:
                 "content": formatted_input
             }
         ],
-        stream=True
+        stream=True,
+        stop="3."
     )
 
     notes = st.write_stream(ranking_resp)
 
-    formatted_input = f"""USER NOTES: {user_notes}\n\nSTORIES: {notes.split('3.')[0]}"""
+    formatted_input = f"""USER NOTES: {user_notes}\n\nSTORIES: {notes}"""
 
     framing_resp = llm.chat.completions.create(
-        model="gpt-4o-mini",
+        model="gpt-4o",
         messages=[
             {
                 "role": "system",
