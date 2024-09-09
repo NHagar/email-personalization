@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import duckdb
 import openai
 import streamlit as st
@@ -8,6 +10,9 @@ load_dotenv()
 
 with open("src/prompts/infer_interests.txt", "r") as f:
     prompt_history = f.read()
+
+with open("src/prompts/item_ranking.txt", "r") as f:
+    prompt_ranking = f.read()
 
 
 llm = openai.OpenAI()
@@ -38,9 +43,9 @@ st.markdown(original_heading.replace("\\n", "\n\n"))
 
 personalization_input_format = f"""USER READING HISTORY: {history}"""
 
-generate = st.button("Generate Personalization")
+generate_history = st.button("Generate history annotation")
 
-if generate:
+if generate_history:
     personalization_resp = llm.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
@@ -58,3 +63,33 @@ if generate:
 
     with st.container(border=True):
         history_annotation = st.write_stream(personalization_resp)
+
+        with open("./data/history_annotation.txt", "w") as f:
+            f.write(history_annotation)
+
+
+generate_reasoning = st.button("Generate newsletter item reasoning")
+
+if generate_reasoning:
+    with open("./data/history_annotation.txt", "r") as f:
+        user_notes = f.read()
+
+    formatted_input = f"""USER NOTES: {user_notes}\n\nCANDIDATE ITEMS: {'\n'.join(newsletter_items.formatted.tolist())}"""
+
+    ranking_resp = llm.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {
+                "role": "system",
+                "content": prompt_ranking
+            },
+            {
+                "role": "user",
+                "content": formatted_input
+            }
+        ],
+        stream=True
+    )
+
+    with st.container(border=True):
+        st.write_stream(ranking_resp)
