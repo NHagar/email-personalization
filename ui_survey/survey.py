@@ -69,8 +69,9 @@ if not st.session_state.part1_completed:
 else:
     if st.session_state.generated_headlines is None:
         pairs = []
+        progress_text = "Setting up part 2..."
         progress_bar = st.progress(0.0, "Setting up part 2...")
-        for i, p in enumerate(newsletter_paths[:2]):
+        for i, p in enumerate(newsletter_paths):
             original = get_original_heading(p)
             generated = generate_heading(
                 p, [k for k, v in st.session_state.selections.items() if v]
@@ -81,7 +82,9 @@ else:
                     {"text": generated, "source": "Generated"},
                 )
             )
-            progress_bar.progress((i + 1) / 2)
+            progress_bar.progress(
+                (i + 1) / len(newsletter_paths), "Setting up part 2..."
+            )
         st.session_state.generated_headlines = pairs
 
     else:
