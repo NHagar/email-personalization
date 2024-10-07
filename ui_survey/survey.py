@@ -1,3 +1,10 @@
+# submit button
+# generation flow
+# option ordering
+# option rendering
+# data persistence
+# url params
+
 import random
 
 import duckdb
