@@ -1,8 +1,10 @@
+import json
 from pathlib import Path
 
 import duckdb
 from dotenv import load_dotenv
 from openai import OpenAI
+from pydantic import BaseModel
 
 load_dotenv()
 
@@ -19,6 +21,12 @@ with open("src/prompts/framing.txt", "r") as f:
     prompt_framing = f.read()
 
 newsletter_paths = list(Path("./data/emails").rglob("*.csv"))
+
+
+class HeadlineResponse(BaseModel):
+    explanation: str
+    headline: str
+    subhed: str
 
 
 def get_original_heading(newsletter_path):
@@ -73,6 +81,11 @@ def generate_heading(newsletter_path, items_read):
     # replace first item with new system prompt
     messages[0]["content"] = prompt_framing
 
-    resp = llm.chat.completions.create(model="gpt-4o-mini", messages=messages)
+    resp = llm.beta.chat.completions.parse(
+        model="gpt-4o-mini", messages=messages, response_format=HeadlineResponse
+    )
 
-    return resp.choices[0].message.content
+    resp_data = json.loads(resp.choices[0].message.content)
+    output = f"""# {resp_data["headline"]}\n\n## {resp_data["subhed"]}"""
+
+    return output

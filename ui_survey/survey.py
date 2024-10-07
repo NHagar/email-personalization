@@ -3,6 +3,7 @@ import random
 import duckdb
 import streamlit as st
 import streamlit_survey as ss
+from headline_generation import generate_heading, get_original_heading, newsletter_paths
 
 con = duckdb.connect(":memory:")
 
@@ -64,5 +65,8 @@ if not st.session_state.part1_completed:
             headlines_subset = headlines[3 * headlines_per_page :]
             render_headlines(survey, headlines_subset, st.session_state.selections)
 else:
-    st.write([k for k, v in st.session_state.selections.items() if v])
-    st.write("Survey completed!")
+    # st.write([k for k, v in st.session_state.selections.items() if v])
+    for p in newsletter_paths[:2]:
+        st.write(get_original_heading(p))
+        st.write(generate_heading(p, [k for k, v in st.session_state.selections.items() if v]))
+        st.write("----")
