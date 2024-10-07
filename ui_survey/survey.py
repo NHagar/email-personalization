@@ -40,6 +40,8 @@ if "selections" not in st.session_state:
     st.session_state.selections = {}
 if "part1_completed" not in st.session_state:
     st.session_state.part1_completed = False
+if "generated_headlines" not in st.session_state:
+    st.session_state.generated_headlines = None
 
 
 def on_submit():
@@ -65,8 +67,30 @@ if not st.session_state.part1_completed:
             headlines_subset = headlines[3 * headlines_per_page :]
             render_headlines(survey, headlines_subset, st.session_state.selections)
 else:
-    # st.write([k for k, v in st.session_state.selections.items() if v])
-    for p in newsletter_paths[:2]:
-        st.write(get_original_heading(p))
-        st.write(generate_heading(p, [k for k, v in st.session_state.selections.items() if v]))
-        st.write("----")
+    if st.session_state.generated_headlines is None:
+        pairs = []
+        progress_bar = st.progress(0.0, "Setting up part 2...")
+        for i, p in enumerate(newsletter_paths[:2]):
+            original = get_original_heading(p)
+            generated = generate_heading(
+                p, [k for k, v in st.session_state.selections.items() if v]
+            )
+            pairs.append(
+                (
+                    {"text": original, "source": "Original"},
+                    {"text": generated, "source": "Generated"},
+                )
+            )
+            progress_bar.progress((i + 1) / 2)
+        st.session_state.generated_headlines = pairs
+
+    else:
+        pairs = st.session_state.generated_headlines
+
+    for pair in pairs:
+        option = st.radio(
+            "Select the better headline:",
+            [pair[0]["text"], pair[1]["text"]],
+            format_func=lambda x: x,
+        )
+        st.write("---")
