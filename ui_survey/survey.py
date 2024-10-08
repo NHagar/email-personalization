@@ -1,5 +1,3 @@
-# generation flow
-# option ordering
 # option rendering
 # data persistence
 # url params
@@ -80,7 +78,7 @@ else:
         progress_bar = st.progress(0.0, "Setting up part 2...")
 
         hg = HeadlineGenerator([k for k, v in st.session_state.selections.items() if v])
-        for i, p in enumerate(newsletter_paths):
+        for i, p in enumerate(newsletter_paths[:5]):
             hg.load_newsletter(p)
             original = hg.original_heading
             generated = hg.generate_heading()
@@ -91,7 +89,7 @@ else:
                 )
             )
             progress_bar.progress(
-                (i + 1) / len(newsletter_paths), "Setting up part 2..."
+                (i + 1) / len(newsletter_paths[:5]), "Setting up part 2..."
             )
         st.session_state.generated_headlines = pairs
 
@@ -99,9 +97,19 @@ else:
         pairs = st.session_state.generated_headlines
 
     for pair in pairs:
-        option = st.radio(
+        options = [
+            (pair[0]["text"], pair[0]["source"]),
+            (pair[1]["text"], pair[1]["source"]),
+        ]
+
+        random.shuffle(options)
+
+        text_to_source = {text: source for text, source in options}
+        option_texts = [text for text, _ in options]
+
+        selected = st.radio(
             "Select the better headline:",
-            [pair[0]["text"], pair[1]["text"]],
+            option_texts,
             format_func=lambda x: x,
         )
         st.write("---")
