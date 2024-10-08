@@ -30,25 +30,8 @@ class HeadlineResponse(BaseModel):
 
 
 class HeadlineGenerator:
-    def __init__(self, items_read, newsletter_path) -> None:
+    def __init__(self, items_read) -> None:
         self.items_read = items_read
-        self.newsletter_path = newsletter_path
-
-    @property
-    def newsletter_items(self):
-        return con.execute(
-            f"SELECT *, 'HEADLINE: ' || headline || '\nDESCRIPTION: ' || description AS formatted FROM '{self.newsletter_path}' WHERE headline != 'SKIP'"
-        ).fetch_df()
-
-    @property
-    def original_heading(self):
-        return (
-            con.execute(
-                f"SELECT '# ' || newsletter_headline || '\n\n' || '## ' || newsletter_sub_hed AS heading FROM '{self.newsletter_path}' "
-            )
-            .fetch_df()
-            .iloc[0, 0]
-        )
 
     @property
     def user_annotations(self):
@@ -65,6 +48,19 @@ class HeadlineGenerator:
         )
 
         return resp.choices[0].message.content
+
+    def load_newsletter(self, newsletter_path):
+        self.newsletter_items = con.execute(
+            f"SELECT *, 'HEADLINE: ' || headline || '\nDESCRIPTION: ' || description AS formatted FROM '{newsletter_path}' WHERE headline != 'SKIP'"
+        ).fetch_df()
+
+        self.original_heading = (
+            con.execute(
+                f"SELECT '# ' || newsletter_headline || '\n\n' || '## ' || newsletter_sub_hed AS heading FROM '{newsletter_path}' "
+            )
+            .fetch_df()
+            .iloc[0, 0]
+        )
 
     def rank_items(self):
         format_input = (

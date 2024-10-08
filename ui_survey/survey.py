@@ -9,7 +9,7 @@ import random
 import duckdb
 import streamlit as st
 import streamlit_survey as ss
-from headline_generation import generate_heading, get_original_heading, newsletter_paths
+from headline_generation import HeadlineGenerator, newsletter_paths
 
 con = duckdb.connect(":memory:")
 
@@ -78,11 +78,12 @@ else:
         pairs = []
         progress_text = "Setting up part 2..."
         progress_bar = st.progress(0.0, "Setting up part 2...")
+
+        hg = HeadlineGenerator([k for k, v in st.session_state.selections.items() if v])
         for i, p in enumerate(newsletter_paths):
-            original = get_original_heading(p)
-            generated = generate_heading(
-                p, [k for k, v in st.session_state.selections.items() if v]
-            )
+            hg.load_newsletter(p)
+            original = hg.original_heading
+            generated = hg.generate_heading()
             pairs.append(
                 (
                     {"text": original, "source": "Original"},
