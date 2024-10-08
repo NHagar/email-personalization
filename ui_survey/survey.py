@@ -53,6 +53,7 @@ if "generated_headlines" not in st.session_state:
 
 def on_submit():
     st.session_state.part1_completed = True
+    st.rerun()
 
 
 pages = survey.pages(4, on_submit=on_submit)
