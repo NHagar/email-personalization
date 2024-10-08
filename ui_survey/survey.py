@@ -107,9 +107,18 @@ else:
         text_to_source = {text: source for text, source in options}
         option_texts = [text for text, _ in options]
 
+        st.write("Select the better headline:")
+
+        cols = st.columns(2)
+        for i, (text, source) in enumerate(options):
+            with cols[i]:
+                st.markdown(f"**Option {i+1}**")
+                st.markdown(text)
+
         selected = st.radio(
-            "Select the better headline:",
+            "Your choice:",
             option_texts,
-            format_func=lambda x: x,
+            format_func=lambda x: f"Option {option_texts.index(x) + 1}",
+            label_visibility="collapsed",
         )
         st.write("---")
