@@ -1,4 +1,3 @@
-# submit button
 # generation flow
 # option ordering
 # option rendering

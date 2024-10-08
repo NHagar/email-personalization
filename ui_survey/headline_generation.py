@@ -29,63 +29,68 @@ class HeadlineResponse(BaseModel):
     subhed: str
 
 
-def get_original_heading(newsletter_path):
-    return (
-        con.execute(
-            f"SELECT '# ' || newsletter_headline || '\n\n' || '## ' || newsletter_sub_hed AS heading FROM '{newsletter_path}' "
+class HeadlineGenerator:
+    def __init__(self, items_read, newsletter_path) -> None:
+        self.items_read = items_read
+        self.newsletter_path = newsletter_path
+
+    @property
+    def newsletter_items(self):
+        return con.execute(
+            f"SELECT *, 'HEADLINE: ' || headline || '\nDESCRIPTION: ' || description AS formatted FROM '{self.newsletter_path}' WHERE headline != 'SKIP'"
+        ).fetch_df()
+
+    @property
+    def original_heading(self):
+        return (
+            con.execute(
+                f"SELECT '# ' || newsletter_headline || '\n\n' || '## ' || newsletter_sub_hed AS heading FROM '{self.newsletter_path}' "
+            )
+            .fetch_df()
+            .iloc[0, 0]
         )
-        .fetch_df()
-        .iloc[0, 0]
-    )
 
+    @property
+    def user_annotations(self):
+        personalization_input_format = (
+            f"""USER READING HISTORY: {"\n".join(self.items_read)}"""
+        )
+        messages = [
+            {"role": "system", "content": prompt_history},
+            {"role": "user", "content": personalization_input_format},
+        ]
+        resp = llm.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=messages,
+        )
 
-def get_newsletter_items(newsletter_path):
-    return con.execute(
-        f"SELECT *, 'HEADLINE: ' || headline || '\nDESCRIPTION: ' || description AS formatted FROM '{newsletter_path}' WHERE headline != 'SKIP'"
-    ).fetch_df()
+        return resp.choices[0].message.content
 
+    def rank_items(self):
+        format_input = (
+            f"""STORIES: {"\n".join(self.newsletter_items.formatted.tolist())}"""
+        )
+        messages = [
+            {"role": "system", "content": prompt_ranking},
+            {"role": "user", "content": format_input},
+        ]
+        resp = llm.chat.completions.create(
+            model="gpt-4o-mini", messages=messages, stop="3."
+        )
 
-def generate_heading(newsletter_path, items_read):
-    items = get_newsletter_items(newsletter_path)
-    personalization_input_format = f"""USER READING HISTORY: {"\n".join(items_read)}"""
+        return resp.choices[0].message.content
 
-    messages = [
-        {"role": "system", "content": prompt_history},
-        {"role": "user", "content": personalization_input_format},
-    ]
+    def generate_heading(self):
+        format_input = f"""STORIES: {self.rank_items()}"""
+        messages = [
+            {"role": "system", "content": prompt_framing},
+            {"role": "user", "content": format_input},
+        ]
+        resp = llm.beta.chat.completions.parse(
+            model="gpt-4o-mini", messages=messages, response_format=HeadlineResponse
+        )
 
-    resp = llm.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=messages,
-    )
+        resp_data = json.loads(resp.choices[0].message.content)
+        output = f"""# {resp_data["headline"]}\n\n## {resp_data["subhed"]}"""
 
-    messages.append({"role": "assistant", "content": resp.choices[0].message.content})
-
-    items_input = f"""CANDIDATE ITEMS: {"\n".join(items.formatted.tolist())}"""
-
-    messages.append({"role": "user", "content": items_input})
-
-    # replace first item with new system prompt
-    messages[0]["content"] = prompt_ranking
-
-    resp = llm.chat.completions.create(
-        model="gpt-4o-mini", messages=messages, stop="3."
-    )
-
-    messages.append({"role": "assistant", "content": resp.choices[0].message.content})
-
-    format_input = f"""STORIES: {resp.choices[0].message.content}"""
-
-    messages.append({"role": "user", "content": format_input})
-
-    # replace first item with new system prompt
-    messages[0]["content"] = prompt_framing
-
-    resp = llm.beta.chat.completions.parse(
-        model="gpt-4o-mini", messages=messages, response_format=HeadlineResponse
-    )
-
-    resp_data = json.loads(resp.choices[0].message.content)
-    output = f"""# {resp_data["headline"]}\n\n## {resp_data["subhed"]}"""
-
-    return output
+        return output
