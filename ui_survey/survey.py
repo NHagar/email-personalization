@@ -1,5 +1,4 @@
 # option rendering
-# data persistence
 # url params
 
 import random
@@ -9,7 +8,7 @@ import streamlit as st
 import streamlit_survey as ss
 from headline_generation import HeadlineGenerator, newsletter_paths
 
-con = duckdb.connect(":memory:")
+con = duckdb.connect("database.db")
 
 
 @st.cache_data
@@ -46,6 +45,8 @@ if "part1_completed" not in st.session_state:
     st.session_state.part1_completed = False
 if "generated_headlines" not in st.session_state:
     st.session_state.generated_headlines = None
+if "headline_preferences" not in st.session_state:
+    st.session_state.headline_preferences = {}
 
 
 def on_submit():
@@ -96,7 +97,7 @@ else:
     else:
         pairs = st.session_state.generated_headlines
 
-    for pair in pairs:
+    for index, pair in enumerate(pairs):
         options = [
             (pair[0]["text"], pair[0]["source"]),
             (pair[1]["text"], pair[1]["source"]),
@@ -115,10 +116,39 @@ else:
                 st.markdown(f"**Option {i+1}**")
                 st.markdown(text)
 
+        radio_key = f"radio_{index}"
+
         selected = st.radio(
             "Your choice:",
             option_texts,
+            key=radio_key,
             format_func=lambda x: f"Option {option_texts.index(x) + 1}",
             label_visibility="collapsed",
         )
+
+        st.session_state.headline_preferences[radio_key] = {
+            "selected": selected,
+            "options": text_to_source,
+        }
+
         st.write("---")
+
+    if st.button("Submit"):
+        # Persist user selections
+        # Selected headlines in part 1
+        # Selected headlines in part 2
+        #   - Both options
+        #   - Sources
+        user_history = [k for k, v in st.session_state.selections.items() if v]
+        user_preferences = st.session_state.headline_preferences
+
+        # Save to database
+        con.execute(
+            "CREATE TABLE IF NOT EXISTS survey_results (user_id STRING, user_history ARRAY, user_preferences ARRAY)"
+        )
+        # TODO: Placeholder UUID
+        con.execute(
+            f"INSERT INTO survey_results VALUES ('{000000}', '{user_history}', '{user_preferences}')"
+        )
+
+        st.success("Your selections have been submitted!")
