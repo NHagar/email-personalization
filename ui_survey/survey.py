@@ -1,5 +1,4 @@
 # option rendering
-# url params
 
 import random
 
@@ -134,11 +133,6 @@ else:
         st.write("---")
 
     if st.button("Submit"):
-        # Persist user selections
-        # Selected headlines in part 1
-        # Selected headlines in part 2
-        #   - Both options
-        #   - Sources
         user_history = [k for k, v in st.session_state.selections.items() if v]
         user_preferences = st.session_state.headline_preferences
 
@@ -146,9 +140,8 @@ else:
         con.execute(
             "CREATE TABLE IF NOT EXISTS survey_results (user_id STRING, user_history ARRAY, user_preferences ARRAY)"
         )
-        # TODO: Placeholder UUID
         con.execute(
-            f"INSERT INTO survey_results VALUES ('{000000}', '{user_history}', '{user_preferences}')"
+            f"INSERT INTO survey_results VALUES ('{st.query_params["user_id"]}', '{user_history}', '{user_preferences}')"
         )
 
         st.success("Your selections have been submitted!")
