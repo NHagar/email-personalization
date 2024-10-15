@@ -1,5 +1,3 @@
-# option rendering
-
 import random
 
 import duckdb

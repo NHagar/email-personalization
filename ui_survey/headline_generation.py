@@ -56,7 +56,7 @@ class HeadlineGenerator:
 
         self.original_heading = (
             con.execute(
-                f"SELECT '# ' || newsletter_headline || '\n\n' || '## ' || newsletter_sub_hed AS heading FROM '{newsletter_path}' "
+                f"SELECT '#### ' || newsletter_headline || '\n' || '**' || newsletter_sub_hed || '**' AS heading FROM '{newsletter_path}' "
             )
             .fetch_df()
             .iloc[0, 0]
@@ -87,6 +87,6 @@ class HeadlineGenerator:
         )
 
         resp_data = json.loads(resp.choices[0].message.content)
-        output = f"""# {resp_data["headline"]}\n\n## {resp_data["subhed"]}"""
+        output = f"""#### {resp_data["headline"]}\n**{resp_data["subhed"]}**"""
 
         return output
