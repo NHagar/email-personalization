@@ -1,3 +1,4 @@
+import json
 import random
 
 import duckdb
@@ -163,10 +164,17 @@ if st.session_state.consent_given and not st.session_state.survey_completed:
 
             # Save to database
             con.execute(
-                "CREATE TABLE IF NOT EXISTS survey_results (user_id STRING, user_history ARRAY, user_preferences ARRAY)"
+                """CREATE TABLE IF NOT EXISTS survey_results (
+                    user_id STRING,
+                    user_history VARCHAR[],
+                    choices LIST(STRUCT(
+                        selected VARCHAR,
+                        options MAP(VARCHAR, VARCHAR)
+                    ))
+                )"""
             )
             con.execute(
-                f"INSERT INTO survey_results VALUES ('{st.query_params["user_id"]}', '{user_history}', '{user_preferences}')"
+                f"INSERT INTO survey_results VALUES ('{st.query_params["user_id"]}', '{user_history}', '{json.dumps(user_preferences)}')"
             )
 
             st.session_state.survey_completed = True
