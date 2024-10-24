@@ -7,7 +7,7 @@ from headline_generation import HeadlineGenerator, newsletter_paths
 
 con = duckdb.connect("database.db")
 
-with open("consent_form.md", "r") as f:
+with open("./ui_survey/consent_form.md", "r") as f:
     consent_screen = f.read()
 
 
@@ -26,6 +26,7 @@ def fetch_headlines(curr, nex, sample_size=100):
 
 
 def render_headlines(survey, headlines, selections):
+    st.write("Please select the headlines you would be interested in reading:")
     for i, item in enumerate(headlines):
         if survey.checkbox(item, key=i, value=selections.get(item, False)):
             selections[item] = True
@@ -96,6 +97,7 @@ if st.session_state.consent_given and not st.session_state.survey_completed:
     else:
         if st.session_state.generated_headlines is None:
             pairs = []
+            shuffled_pairs = []
             progress_text = "Setting up part 2..."
             progress_bar = st.progress(0.0, "Setting up part 2...")
 
@@ -106,38 +108,37 @@ if st.session_state.consent_given and not st.session_state.survey_completed:
                 hg.load_newsletter(p)
                 original = hg.original_heading
                 generated = hg.generate_heading()
-                pairs.append(
-                    (
-                        {"text": original, "source": "Original"},
-                        {"text": generated, "source": "Generated"},
-                    )
+                pair = (
+                    {"text": original, "source": "Original"},
+                    {"text": generated, "source": "Generated"},
                 )
+                options = list(pair)
+                random.shuffle(options)
+                shuffled_pairs.append(options)
+                pairs.append(pair)
                 progress_bar.progress(
                     (i + 1) / len(newsletter_paths[:5]), "Setting up part 2..."
                 )
             st.session_state.generated_headlines = pairs
+            st.session_state.shuffled_headlines = shuffled_pairs
 
         else:
             pairs = st.session_state.generated_headlines
+            shuffled_pairs = st.session_state.shuffled_headlines
 
-        for index, pair in enumerate(pairs):
-            options = [
-                (pair[0]["text"], pair[0]["source"]),
-                (pair[1]["text"], pair[1]["source"]),
-            ]
+        for index, options in enumerate(shuffled_pairs):
+            text_to_source = {opt["text"]: opt["source"] for opt in options}
+            option_texts = [opt["text"] for opt in options]
 
-            random.shuffle(options)
-
-            text_to_source = {text: source for text, source in options}
-            option_texts = [text for text, _ in options]
-
-            st.write("Select the better headline:")
+            st.write(
+                "For each pair of headlines, please select the one you would prefer to read."
+            )
 
             cols = st.columns(2)
-            for i, (text, source) in enumerate(options):
+            for i, opt in enumerate(options):
                 with cols[i]:
                     st.markdown(f"**Option {i+1}**")
-                    st.markdown(text)
+                    st.markdown(opt["text"])
 
             radio_key = f"radio_{index}"
 
