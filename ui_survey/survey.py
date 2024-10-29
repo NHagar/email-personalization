@@ -1,7 +1,7 @@
-import json
 import random
 
 import duckdb
+import pandas as pd
 import streamlit as st
 import streamlit_survey as ss
 from headline_generation import HeadlineGenerator, newsletter_paths
@@ -131,9 +131,7 @@ if st.session_state.consent_given and not st.session_state.survey_completed:
             text_to_source = {opt["text"]: opt["source"] for opt in options}
             option_texts = [opt["text"] for opt in options]
 
-            st.write(
-                "For each pair of headlines, please select the one you would prefer to read."
-            )
+            st.write("Please select the headline you would prefer to read:")
 
             cols = st.columns(2)
             for i, opt in enumerate(options):
@@ -162,20 +160,20 @@ if st.session_state.consent_given and not st.session_state.survey_completed:
             user_history = [k for k, v in st.session_state.selections.items() if v]
             user_preferences = st.session_state.headline_preferences
 
-            # Save to database
-            con.execute(
-                """CREATE TABLE IF NOT EXISTS survey_results (
-                    user_id STRING,
-                    user_history VARCHAR[],
-                    choices LIST(STRUCT(
-                        selected VARCHAR,
-                        options MAP(VARCHAR, VARCHAR)
-                    ))
-                )"""
+            results = pd.DataFrame(
+                [
+                    {
+                        "user_id": st.query_params["user_id"],
+                        "user_history": user_history,
+                        "choices": user_preferences,
+                    }
+                ]
             )
+
             con.execute(
-                f"INSERT INTO survey_results VALUES ('{st.query_params["user_id"]}', '{user_history}', '{json.dumps(user_preferences)}')"
+                "CREATE TABLE IF NOT EXISTS survey_results (user_id VARCHAR, user_history JSON, choices JSON)"
             )
+            results.to_sql("survey_results", con, if_exists="append", index=False)
 
             st.session_state.survey_completed = True
             st.rerun()
