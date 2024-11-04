@@ -102,7 +102,9 @@ def fetch_headlines():
 
 
 def render_headlines(survey, headlines, selections):
-    st.write("Please select the headlines you would be interested in reading:")
+    st.write(
+        "## Please select the headlines you would be interested in reading.\nYou can select as many or as few as are of interest to you."
+    )
     for i, item in enumerate(headlines):
         if survey.checkbox(item, key=i, value=selections.get(item, False)):
             selections[item] = True
@@ -202,11 +204,13 @@ if st.session_state.consent_given and not st.session_state.survey_completed:
             pairs = st.session_state.generated_headlines
             shuffled_pairs = st.session_state.shuffled_headlines
 
+        st.write(
+            "### For each pair, select the headline that you would be more likely to click on and read. Consider both the main headline and the additional context below it."
+        )
+
         for index, options in enumerate(shuffled_pairs):
             text_to_source = {opt["text"]: opt["source"] for opt in options}
             option_texts = [opt["text"] for opt in options]
-
-            st.write("Please select the headline you would prefer to read:")
 
             cols = st.columns(2)
             for i, opt in enumerate(options):
