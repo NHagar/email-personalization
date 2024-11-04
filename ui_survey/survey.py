@@ -30,6 +30,7 @@ samples AS (
     CEIL(proportion) as rows_to_sample
   FROM './data/nyt_archive_all.parquet'
   JOIN proportions USING (news_desk)
+  WHERE LENGTH(headline) > 5
 )
 SELECT headline
 FROM samples
