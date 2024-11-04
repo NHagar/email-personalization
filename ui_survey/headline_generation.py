@@ -2,13 +2,11 @@ import json
 from pathlib import Path
 
 import duckdb
-from dotenv import load_dotenv
 from openai import OpenAI
 from pydantic import BaseModel
+from streamlit import secrets
 
-load_dotenv()
-
-llm = OpenAI()
+llm = OpenAI(api_key=secrets["OPENAI_API_KEY"])
 con = duckdb.connect(database=":memory:")
 
 with open("src/prompts/infer_interests.txt", "r") as f:
