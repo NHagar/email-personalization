@@ -3,7 +3,10 @@
 pyrightconfig.json
 __pycache__/
 *.db
+.streamlit/
 
 data/*
 !data/nyt_archive_all.parquet
-.streamlit/
+!data/emails/
+data/emails/*
+!data/emails/*.csv
