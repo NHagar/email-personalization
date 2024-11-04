@@ -4,4 +4,3 @@ data/
 pyrightconfig.json
 __pycache__/
 *.db
-*.md
