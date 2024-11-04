@@ -1,9 +1,12 @@
+import json
 import random
+from datetime import datetime
 
 import duckdb
-import pandas as pd
+import gspread
 import streamlit as st
 import streamlit_survey as ss
+from google.oauth2 import service_account
 from headline_generation import HeadlineGenerator, newsletter_paths
 
 con = duckdb.connect("database.db")
@@ -32,6 +35,62 @@ SELECT headline
 FROM samples
 WHERE rn <= rows_to_sample
 LIMIT 100;"""
+
+
+def initialize_google_sheets():
+    """Initialize and return Google Sheets client."""
+    # Create a connection object
+    credentials = service_account.Credentials.from_service_account_info(
+        st.secrets["gcp_service_account"],
+        scopes=[
+            "https://www.googleapis.com/auth/spreadsheets",
+            "https://www.googleapis.com/auth/drive",
+        ],
+    )
+
+    return gspread.authorize(credentials)
+
+
+def get_or_create_sheet(
+    gc, spreadsheet_name="Survey Responses", worksheet_name="responses"
+):
+    """Get existing or create new spreadsheet and worksheet."""
+    try:
+        # First try to open by the spreadsheet ID if provided in secrets
+        if "spreadsheet_id" in st.secrets:
+            spreadsheet = gc.open_by_key(st.secrets["spreadsheet_id"])
+        else:
+            # Try to open by name
+            spreadsheet = gc.open(spreadsheet_name)
+    except (gspread.SpreadsheetNotFound, KeyError):
+        # Create new spreadsheet
+        spreadsheet = gc.create(spreadsheet_name)
+
+        # Share with your account (replace with your email)
+        spreadsheet.share(st.secrets["share_email"], perm_type="user", role="editor")
+
+    # Get or create worksheet
+    try:
+        worksheet = spreadsheet.worksheet(worksheet_name)
+    except gspread.WorksheetNotFound:
+        worksheet = spreadsheet.add_worksheet(worksheet_name, 1000, 20)
+        # Add headers to the worksheet
+        headers = ["timestamp", "user_id", "history", "choices"]
+        worksheet.append_row(headers)
+
+    return worksheet
+
+
+def save_response(worksheet, response_data):
+    """Save response to Google Sheets."""
+    worksheet.append_row(
+        [
+            str(datetime.now()),
+            response_data["user_id"],
+            response_data["history"],
+            response_data["choices"],
+        ]
+    )
 
 
 @st.cache_data
@@ -176,20 +235,16 @@ if st.session_state.consent_given and not st.session_state.survey_completed:
             user_history = [k for k, v in st.session_state.selections.items() if v]
             user_preferences = st.session_state.headline_preferences
 
-            results = pd.DataFrame(
-                [
-                    {
-                        "user_id": st.query_params["user_id"],
-                        "user_history": user_history,
-                        "choices": user_preferences,
-                    }
-                ]
-            )
+            results = {
+                "user_id": st.query_params["user_id"],
+                "history": json.dumps(user_history),
+                "choices": json.dumps(user_preferences),
+            }
 
-            con.execute(
-                "CREATE TABLE IF NOT EXISTS survey_results (user_id VARCHAR, user_history JSON, choices JSON)"
-            )
-            results.to_sql("survey_results", con, if_exists="append", index=False)
+            # Initialize Google Sheets
+            gc = initialize_google_sheets()
+            worksheet = get_or_create_sheet(gc)
+            save_response(worksheet, results)
 
             st.session_state.survey_completed = True
             st.rerun()
