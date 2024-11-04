@@ -152,7 +152,7 @@ if not st.session_state.consent_given:
     st.stop()
 
 
-pages = survey.pages(4, on_submit=on_submit)
+pages = survey.pages(4, on_submit=on_submit, progress_bar=True)
 
 if st.session_state.consent_given and not st.session_state.survey_completed:
     if not st.session_state.part1_completed:
@@ -177,6 +177,7 @@ if st.session_state.consent_given and not st.session_state.survey_completed:
         if st.session_state.generated_headlines is None:
             pairs = []
             shuffled_pairs = []
+            st.write("### Please wait for part 2 of the survey to load...")
             progress_text = "Setting up part 2..."
             progress_bar = st.progress(0.0, "Setting up part 2...")
 
@@ -200,7 +201,7 @@ if st.session_state.consent_given and not st.session_state.survey_completed:
                 )
             st.session_state.generated_headlines = pairs
             st.session_state.shuffled_headlines = shuffled_pairs
-
+            st.rerun()
         else:
             pairs = st.session_state.generated_headlines
             shuffled_pairs = st.session_state.shuffled_headlines
