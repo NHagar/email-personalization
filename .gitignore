@@ -6,7 +6,7 @@ __pycache__/
 .streamlit/
 
 data/*
-!data/nyt_archive_all.parquet
+!data/nyt_sampled.parquet
 !data/emails/
 data/emails/*
 !data/emails/*.csv

@@ -14,28 +14,7 @@ con = duckdb.connect("database.db")
 with open("./ui_survey/consent_form.md", "r") as f:
     consent_screen = f.read()
 
-query = """WITH proportions AS (
-  SELECT
-    news_desk,
-    COUNT(*) * 100.0 / (SELECT COUNT(*) FROM './data/nyt_archive_all.parquet') AS proportion
-  FROM './data/nyt_archive_all.parquet'
-  GROUP BY news_desk
-),
-samples AS (
-  SELECT *,
-    ROW_NUMBER() OVER (
-      PARTITION BY news_desk
-      ORDER BY RANDOM()
-    ) as rn,
-    CEIL(proportion) as rows_to_sample
-  FROM './data/nyt_archive_all.parquet'
-  JOIN proportions USING (news_desk)
-  WHERE LENGTH(headline) > 5
-)
-SELECT headline
-FROM samples
-WHERE rn <= rows_to_sample
-LIMIT 100;"""
+query = "SELECT * FROM './data/nyt_sampled.parquet';"
 
 
 def initialize_google_sheets():
