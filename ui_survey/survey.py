@@ -121,6 +121,8 @@ if st.session_state.consent_given and not st.session_state.survey_completed:
             hg = HeadlineGenerator(
                 [k for k, v in st.session_state.selections.items() if v]
             )
+            st.write("Newsletter paths:")
+            st.write(newsletter_paths[:5])
             for i, p in enumerate(newsletter_paths[:5]):
                 hg.load_newsletter(p)
                 original = hg.original_heading
