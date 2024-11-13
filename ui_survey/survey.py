@@ -55,7 +55,7 @@ def get_or_create_sheet(
     except gspread.WorksheetNotFound:
         worksheet = spreadsheet.add_worksheet(worksheet_name, 1000, 20)
         # Add headers to the worksheet
-        headers = ["timestamp", "user_id", "history", "choices"]
+        headers = ["timestamp", "user_id", "study_id", "session_id", "history", "choices"]
         worksheet.append_row(headers)
 
     return worksheet
@@ -67,6 +67,8 @@ def save_response(worksheet, response_data):
         [
             str(datetime.now()),
             response_data["user_id"],
+            response_data["study_id"],
+            response_data["session_id"],
             response_data["history"],
             response_data["choices"],
         ]
@@ -221,7 +223,9 @@ if st.session_state.consent_given and not st.session_state.survey_completed:
             user_preferences = st.session_state.headline_preferences
 
             results = {
-                "user_id": st.query_params["user_id"],
+                "user_id": st.query_params["PROLIFIC_PID"],
+                "study_id": st.query_params["STUDY_ID"],
+                "session_id": st.query_params["SESSION_ID"],
                 "history": json.dumps(user_history),
                 "choices": json.dumps(user_preferences),
             }
