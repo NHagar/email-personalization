@@ -253,8 +253,6 @@ if st.session_state.survey_completed:
 
     Thank you again for your participation!
     """)
-    if st.button("Finish"):
-        st.balloons()
-        st.markdown(f"""<meta http-equiv="refresh" content="3; url={st.secrets['redirect_url']}">""", unsafe_allow_html=True)
-        st.write("Redirecting you back to Prolific...")
-        st.stop()
+    st.balloons()
+    st.write("Please click the link below to return to Prolific:")
+    st.markdown(f"[Return to Prolific]({st.secrets['redirect_url']})")
