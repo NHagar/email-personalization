@@ -39,8 +39,6 @@ class HeadlineGenerator:
     def __init__(self, items_read) -> None:
         self.items_read = items_read
 
-    @property
-    def user_annotations(self):
         personalization_input_format = (
             f"""USER READING HISTORY: {"\n".join(self.items_read)}"""
         )
@@ -49,11 +47,10 @@ class HeadlineGenerator:
             {"role": "user", "content": personalization_input_format},
         ]
         resp = llm.chat.completions.create(
-            model="gpt-4o-mini",
+            model="gpt-4o",
             messages=messages,
         )
-
-        return resp.choices[0].message.content
+        self.user_annotations = resp.choices[0].message.content
 
     def load_newsletter(self, newsletter_path):
         self.newsletter_items = con.execute(
@@ -70,14 +67,16 @@ class HeadlineGenerator:
 
     def rank_items(self):
         format_input = (
-            f"""STORIES: {"\n".join(self.newsletter_items.formatted.tolist())}"""
+            f"""USER NOTES: {self.user_annotations}
+            
+            CANDIDATE STORIES: {"\n".join(self.newsletter_items.formatted.tolist())}"""
         )
         messages = [
             {"role": "system", "content": prompt_ranking},
             {"role": "user", "content": format_input},
         ]
         resp = llm.chat.completions.create(
-            model="gpt-4o-mini", messages=messages, stop="3."
+            model="gpt-4o", messages=messages, stop="3."
         )
 
         return resp.choices[0].message.content
@@ -89,7 +88,7 @@ class HeadlineGenerator:
             {"role": "user", "content": format_input},
         ]
         resp = llm.beta.chat.completions.parse(
-            model="gpt-4o-mini", messages=messages, response_format=HeadlineResponse
+            model="gpt-4o", messages=messages, response_format=HeadlineResponse
         )
 
         resp_data = json.loads(resp.choices[0].message.content)

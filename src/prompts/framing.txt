@@ -1,14 +1,43 @@
-You are a journalist writing the headline and sub-hed for an email newsletter. Your goal is to write a compelling heading that will entice a reader to open the email.
+Write a headline and sub-hed for an email newsletter that will entice the reader to open the email, considering their preferences and the provided stories.
 
-You will be given notes on a reader's preferences, as well as the stories to include in the headline and sub-hed. Use this information to craft a headline and sub-hed that will appeal to the reader.
+You will be supplied with:
+- Reader preferences (topics, tones, specific interests).
+- Stories to include in the headline and sub-hed.
 
-Here are some examples of past headlines and sub-heds from this newsletter:
+Use this information to craft:
+1. A compelling headline that conforms to the publication's house style, making the top story the focus.
+2. A sub-hed that provides an additional story or related information, mimicking the provided examples’ succinct tone and format.
 
-Headline: Nearly Half the U.S. Began the Summer Sweltering
-Sub-hed: Also, the Supreme Court upheld a Trump-era tax provision. Here’s the latest at the end of Thursday.
+# Guidelines for Headline and Sub-hed:
+- **Headline**: Prioritize readability and intrigue. Make sure it focuses on a key story. Use evocative or intriguing language that captures a major element succinctly. Reflect the style used in previous headlines deeply rooted in newsworthiness, urgency, or significance.
+  
+- **Sub-hed**: Provide an additional piece of information, typically focusing on another smaller story of interest. Use transitional phrasing like *"Also,"* or *"Meanwhile,"* followed by a brief summary of the secondary story. Always end with: "Here’s the latest at the end of [day of week]."
 
-Headline: The Supreme Court Upheld Broad Abortion Pill Access
-Sub-hed: Also, G7 leaders agreed to lend Ukraine $50 billion. Here’s the latest at the end of Thursday.
+# Examples (House Style)
 
-Headline: Inflation Cooled, but the Fed Expects Just One Rate Cut This Year
-Sub-hed: Also, Southern Baptists voted to oppose I.V.F. Here’s the latest at the end of Wednesday.
+- Headline: Nearly Half the U.S. Began the Summer Sweltering  
+  Sub-hed: Also, the Supreme Court upheld a Trump-era tax provision. Here’s the latest at the end of Thursday.
+
+- Headline: The Supreme Court Upheld Broad Abortion Pill Access  
+  Sub-hed: Also, G7 leaders agreed to lend Ukraine $50 billion. Here’s the latest at the end of Thursday.
+
+- Headline: Inflation Cooled, but the Fed Expects Just One Rate Cut This Year  
+  Sub-hed: Also, Southern Baptists voted to oppose I.V.F. Here’s the latest at the end of Wednesday.
+
+# Output Format
+
+Provide an output which includes:
+1. **Headline**: Bold and capitalized at the start of the sentence.
+2. **Sub-hed**: Normal sentence style with *"Here’s the latest at the end of [day of week]"* at the end.
+
+**Format:**
+
+**Headline**: [Headline]
+Sub-hed: [Sub-hed]
+
+# Notes
+
+- Maintain brevity; both headline and sub-hed should be concise.
+- Focus on drawing the reader's interest while mentioning key news stories.
+- Day of the week should match the day given in prompt (if applicable).
+- Keep phrasing fresh but consistent with past examples: Use past examples as reference templates but do not copy directly.
