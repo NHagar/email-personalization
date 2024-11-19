@@ -18,7 +18,15 @@ with open("src/prompts/item_ranking.txt", "r") as f:
 with open("src/prompts/framing.txt", "r") as f:
     prompt_framing = f.read()
 
-newsletter_paths = list(Path("./data/emails").rglob("*.csv"))
+data_path = Path("./data/emails")
+
+newsletter_paths = [
+    data_path / "Arizona and Missouri Will Vote on Abortion in November - The New York Times.csv",
+    data_path / "Harris and Trump Battled for the Midwest - The New York Times.csv",
+    data_path / "In Chicago, Obama Aims to Resurrect a Movement - The New York Times.csv",
+    data_path / "Russia Freed Evan Gershkovich in a Major Prisoner Swap - The New York Times.csv",
+    data_path / "Trump’s Pitch to Parents - The New York Times.csv"
+]
 
 
 class HeadlineResponse(BaseModel):

@@ -85,7 +85,7 @@ def fetch_headlines():
 
 def render_headlines(survey, headlines, selections):
     st.write(
-        "## Please select the headlines you would be interested in reading.\nYou can select as many or as few as are of interest to you."
+        "## Please select the New York Times headlines, published between May and July 2024, that you would be interested in reading.\nYou can select as many or as few as are of interest to you."
     )
     for i, item in enumerate(headlines):
         if survey.checkbox(item, key=i, value=selections.get(item, False)):
@@ -188,7 +188,7 @@ if st.session_state.consent_given and not st.session_state.survey_completed:
             shuffled_pairs = st.session_state.shuffled_headlines
 
         st.write(
-            "### For each pair, select the headline that you would be more likely to click on and read. Consider both the main headline and the additional context below it."
+            "### Below are headlines from the New York Times Evening Briefing newsletter, published in August 2024. For each pair, select the headline that you would be more likely to click on and read. Consider both the main headline and the additional context below it."
         )
 
         for index, options in enumerate(shuffled_pairs):
