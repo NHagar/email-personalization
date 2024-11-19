@@ -41,7 +41,7 @@ class HeadlineGenerator:
             {"role": "user", "content": personalization_input_format},
         ]
         resp = llm.chat.completions.create(
-            model="gpt-4o-mini",
+            model="gpt-4o",
             messages=messages,
         )
 
@@ -69,7 +69,7 @@ class HeadlineGenerator:
             {"role": "user", "content": format_input},
         ]
         resp = llm.chat.completions.create(
-            model="gpt-4o-mini", messages=messages, stop="3."
+            model="gpt-4o", messages=messages, stop="3."
         )
 
         return resp.choices[0].message.content
@@ -81,7 +81,7 @@ class HeadlineGenerator:
             {"role": "user", "content": format_input},
         ]
         resp = llm.beta.chat.completions.parse(
-            model="gpt-4o-mini", messages=messages, response_format=HeadlineResponse
+            model="gpt-4o", messages=messages, response_format=HeadlineResponse
         )
 
         resp_data = json.loads(resp.choices[0].message.content)
