@@ -254,5 +254,5 @@ if st.session_state.survey_completed:
     Thank you again for your participation!
     """)
     st.balloons()
-    st.write("Please click the link below to return to Prolific:")
+    st.markdown("## Please click the link below to return to Prolific:")
     st.markdown(f"[Return to Prolific]({st.secrets['redirect_url']})")
