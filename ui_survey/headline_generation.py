@@ -9,13 +9,13 @@ from streamlit import secrets
 llm = OpenAI(api_key=secrets["OPENAI_API_KEY"])
 con = duckdb.connect(database=":memory:")
 
-with open("src/prompts/infer_interests.txt", "r") as f:
+with open("./prompts/infer_interests.txt", "r") as f:
     prompt_history = f.read()
 
-with open("src/prompts/item_ranking.txt", "r") as f:
+with open("./prompts/item_ranking.txt", "r") as f:
     prompt_ranking = f.read()
 
-with open("src/prompts/framing.txt", "r") as f:
+with open("./prompts/framing.txt", "r") as f:
     prompt_framing = f.read()
 
 data_path = Path("./data/emails")
