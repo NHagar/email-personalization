@@ -55,7 +55,7 @@ def get_or_create_sheet(
     except gspread.WorksheetNotFound:
         worksheet = spreadsheet.add_worksheet(worksheet_name, 1000, 20)
         # Add headers to the worksheet
-        headers = ["timestamp", "user_id", "study_id", "session_id", "history", "choices"]
+        headers = ["timestamp", "user_id", "study_id", "session_id", "history", "choices", "user_annotations"]
         worksheet.append_row(headers)
 
     return worksheet
@@ -71,6 +71,7 @@ def save_response(worksheet, response_data):
             response_data["session_id"],
             response_data["history"],
             response_data["choices"],
+            response_data["user_annotations"],
         ]
     )
 
@@ -182,6 +183,7 @@ if st.session_state.consent_given and not st.session_state.survey_completed:
                 )
             st.session_state.generated_headlines = pairs
             st.session_state.shuffled_headlines = shuffled_pairs
+            st.session_state.user_annotations = hg.user_annotations
             st.rerun()
         else:
             pairs = st.session_state.generated_headlines
@@ -228,6 +230,7 @@ if st.session_state.consent_given and not st.session_state.survey_completed:
                 "session_id": st.query_params["SESSION_ID"],
                 "history": json.dumps(user_history),
                 "choices": json.dumps(user_preferences),
+                "user_annotations": st.session_state.user_annotations,
             }
 
             # Initialize Google Sheets
