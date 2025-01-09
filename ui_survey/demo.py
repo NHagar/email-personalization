@@ -43,8 +43,6 @@ if "generated_headlines" not in st.session_state:
     st.session_state.generated_headlines = None
 if "headline_preferences" not in st.session_state:
     st.session_state.headline_preferences = {}
-if "survey_completed" not in st.session_state:
-    st.session_state.survey_completed = False
 
 
 def on_submit():
@@ -54,90 +52,59 @@ def on_submit():
 
 pages = survey.pages(4, on_submit=on_submit, progress_bar=True)
 
-if not st.session_state.survey_completed:
-    if not st.session_state.part1_completed:
-        with pages:
-            if pages.current == 0:
-                headlines_subset = headlines[:headlines_per_page]
-                render_headlines(survey, headlines_subset, st.session_state.selections)
-            elif pages.current == 1:
-                headlines_subset = headlines[
-                    headlines_per_page : 2 * headlines_per_page
-                ]
-                render_headlines(survey, headlines_subset, st.session_state.selections)
-            elif pages.current == 2:
-                headlines_subset = headlines[
-                    2 * headlines_per_page : 3 * headlines_per_page
-                ]
-                render_headlines(survey, headlines_subset, st.session_state.selections)
-            elif pages.current == 3:
-                headlines_subset = headlines[3 * headlines_per_page :]
-                render_headlines(survey, headlines_subset, st.session_state.selections)
+if not st.session_state.part1_completed:
+    with pages:
+        if pages.current == 0:
+            headlines_subset = headlines[:headlines_per_page]
+            render_headlines(survey, headlines_subset, st.session_state.selections)
+        elif pages.current == 1:
+            headlines_subset = headlines[headlines_per_page : 2 * headlines_per_page]
+            render_headlines(survey, headlines_subset, st.session_state.selections)
+        elif pages.current == 2:
+            headlines_subset = headlines[
+                2 * headlines_per_page : 3 * headlines_per_page
+            ]
+            render_headlines(survey, headlines_subset, st.session_state.selections)
+        elif pages.current == 3:
+            headlines_subset = headlines[3 * headlines_per_page :]
+            render_headlines(survey, headlines_subset, st.session_state.selections)
+else:
+    if st.session_state.generated_headlines is None:
+        pairs = []
+        st.write("### Please wait for part 2 of the survey to load...")
+        progress_text = "Setting up part 2..."
+        progress_bar = st.progress(0.0, "Setting up part 2...")
+
+        hg = HeadlineGenerator([k for k, v in st.session_state.selections.items() if v])
+        for i, p in enumerate(newsletter_paths[:5]):
+            hg.load_newsletter(p)
+            original = hg.original_heading
+            generated = hg.generate_heading()
+            pair = (
+                {"text": original, "source": "Original"},
+                {"text": generated, "source": "Generated"},
+            )
+            pairs.append(pair)
+            progress_bar.progress(
+                (i + 1) / len(newsletter_paths[:5]), "Setting up part 2..."
+            )
+        st.session_state.generated_headlines = pairs
+        st.session_state.user_annotations = hg.user_annotations
+        st.rerun()
     else:
-        if st.session_state.generated_headlines is None:
-            pairs = []
-            shuffled_pairs = []
-            st.write("### Please wait for part 2 of the survey to load...")
-            progress_text = "Setting up part 2..."
-            progress_bar = st.progress(0.0, "Setting up part 2...")
+        pairs = st.session_state.generated_headlines
 
-            hg = HeadlineGenerator(
-                [k for k, v in st.session_state.selections.items() if v]
-            )
-            for i, p in enumerate(newsletter_paths[:5]):
-                hg.load_newsletter(p)
-                original = hg.original_heading
-                generated = hg.generate_heading()
-                pair = (
-                    {"text": original, "source": "Original"},
-                    {"text": generated, "source": "Generated"},
-                )
-                options = list(pair)
-                random.shuffle(options)
-                shuffled_pairs.append(options)
-                pairs.append(pair)
-                progress_bar.progress(
-                    (i + 1) / len(newsletter_paths[:5]), "Setting up part 2..."
-                )
-            st.session_state.generated_headlines = pairs
-            st.session_state.shuffled_headlines = shuffled_pairs
-            st.session_state.user_annotations = hg.user_annotations
-            st.rerun()
-        else:
-            pairs = st.session_state.generated_headlines
-            shuffled_pairs = st.session_state.shuffled_headlines
+    st.write(
+        "### Below are headlines from the New York Times Evening Briefing newsletter, published in August 2024. For each pair, select the headline that you would be more likely to click on and read. Consider both the main headline and the additional context below it."
+    )
 
-        st.write(
-            "### Below are headlines from the New York Times Evening Briefing newsletter, published in August 2024. For each pair, select the headline that you would be more likely to click on and read. Consider both the main headline and the additional context below it."
-        )
+    for index, options in enumerate(pairs):
+        cols = st.columns(2)
+        with cols[0]:
+            st.caption(":blue[Original]")
+            st.markdown(options[0]["text"])
+        with cols[1]:
+            st.caption(":red[LLM generated]")
+            st.markdown(options[1]["text"])
 
-        for index, options in enumerate(shuffled_pairs):
-            text_to_source = {opt["text"]: opt["source"] for opt in options}
-            option_texts = [opt["text"] for opt in options]
-
-            cols = st.columns(2)
-            for i, opt in enumerate(options):
-                with cols[i]:
-                    st.markdown(f"**Option {i+1}**")
-                    st.markdown(opt["text"])
-
-            radio_key = f"radio_{index}"
-
-            selected = st.radio(
-                "Your choice:",
-                option_texts,
-                key=radio_key,
-                format_func=lambda x: f"Option {option_texts.index(x) + 1}",
-                label_visibility="collapsed",
-            )
-
-            st.session_state.headline_preferences[radio_key] = {
-                "selected": selected,
-                "options": text_to_source,
-            }
-
-            st.write("---")
-
-        if st.button("Submit"):
-            user_history = [k for k, v in st.session_state.selections.items() if v]
-            user_preferences = st.session_state.headline_preferences
+        st.write("---")
