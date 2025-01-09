@@ -5,6 +5,14 @@ import streamlit as st
 import streamlit_survey as ss
 from headline_generation import HeadlineGenerator, newsletter_paths
 
+# Add explainer box at the start
+st.info("""
+### Personalized Newsletter Headlines: An AI Demo
+This demo shows how AI can tailor newsletter headlines to individual readers, using the New York Times Evening Briefing as a case study. Here's how it works: First, you select which New York Times stories you'd like to read, creating a simulated reading history. GPT-4o then analyzes your preferences, identifies relevant stories from each newsletter, and generates a personalized headline that highlights the content you're most likely to care about. In user testing with actual New York Times readers, 62% preferred these AI-generated headlines to the original ones.
+
+Want to learn more? Check out our blog post for the full research findings.
+""")
+
 con = duckdb.connect("database.db")
 
 query = "SELECT * FROM './data/nyt_sampled.parquet';"
@@ -20,7 +28,7 @@ def fetch_headlines():
 
 def render_headlines(survey, headlines, selections):
     st.write(
-        "## Please select the New York Times headlines, published between May and July 2024, that you would be interested in reading.\nYou can select as many or as few as are of interest to you."
+        "#### Please select the New York Times headlines, published between May and July 2024, that you would be interested in reading."
     )
     for i, item in enumerate(headlines):
         if survey.checkbox(item, key=i, value=selections.get(item, False)):
@@ -71,9 +79,8 @@ if not st.session_state.part1_completed:
 else:
     if st.session_state.generated_headlines is None:
         pairs = []
-        st.write("### Please wait for part 2 of the survey to load...")
-        progress_text = "Setting up part 2..."
-        progress_bar = st.progress(0.0, "Setting up part 2...")
+        progress_text = "Generating headlines..."
+        progress_bar = st.progress(0.0, progress_text)
 
         hg = HeadlineGenerator([k for k, v in st.session_state.selections.items() if v])
         for i, p in enumerate(newsletter_paths[:5]):
@@ -85,9 +92,7 @@ else:
                 {"text": generated, "source": "Generated"},
             )
             pairs.append(pair)
-            progress_bar.progress(
-                (i + 1) / len(newsletter_paths[:5]), "Setting up part 2..."
-            )
+            progress_bar.progress((i + 1) / len(newsletter_paths[:5]), progress_text)
         st.session_state.generated_headlines = pairs
         st.session_state.user_annotations = hg.user_annotations
         st.rerun()
@@ -95,7 +100,10 @@ else:
         pairs = st.session_state.generated_headlines
 
     st.write(
-        "### Below are headlines from the New York Times Evening Briefing newsletter, published in August 2024. For each pair, select the headline that you would be more likely to click on and read. Consider both the main headline and the additional context below it."
+        "#### Now, compare how the Evening Briefing headlines could be personalized based on your interests.\n\n"
+        "For each story below, you'll see:\n"
+        "- The original Evening Briefing headline on the left\n"
+        "- An AI-generated version on the right, tailored to highlight aspects that match your reading preferences\n\n"
     )
 
     # Add dropdown for user annotations
