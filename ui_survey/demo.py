@@ -99,11 +99,18 @@ else:
     )
 
     for index, options in enumerate(pairs):
-        cols = st.columns(2)
+        cols = st.columns([4, 1, 4])  # 3 columns with ratio 4:1:4
         with cols[0]:
             st.caption(":blue[Original]")
             st.markdown(options[0]["text"])
         with cols[1]:
+            st.write("")
+            st.write("")
+            st.write("")
+            st.write("")
+            st.write("")
+            st.markdown("### →")  # Arrow centered vertically
+        with cols[2]:
             st.caption(":red[LLM generated]")
             st.markdown(options[1]["text"])
 
