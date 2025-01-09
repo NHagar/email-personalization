@@ -98,6 +98,11 @@ else:
         "### Below are headlines from the New York Times Evening Briefing newsletter, published in August 2024. For each pair, select the headline that you would be more likely to click on and read. Consider both the main headline and the additional context below it."
     )
 
+    # Add dropdown for user annotations
+    if st.session_state.user_annotations:
+        with st.expander("View LLM analysis of your selected stories"):
+            st.markdown(st.session_state.user_annotations)
+
     for index, options in enumerate(pairs):
         cols = st.columns([4, 1, 4])  # 3 columns with ratio 4:1:4
         with cols[0]:
