@@ -42,36 +42,34 @@ n_participants = len(proportion_generated)
 # Create figure with specified size
 plt.figure(figsize=(12, 6))
 
-# Create the main distribution plot
-sns.kdeplot(
-    data=proportion_generated, fill=True, color="#3b82f6", alpha=0.5, linewidth=2
-)
+# Set larger font sizes globally
+plt.rcParams.update({"font.size": 14})
 
-# Add mean line
-plt.axvline(
-    x=np.mean(proportion_generated),
-    color="red",
-    linestyle="--",
-    linewidth=2,
+# Create the main distribution plot
+sns.histplot(
+    proportion_generated,
 )
 
 # Customize the plot
 plt.title(
     "Distribution of Reader Preferences for LLM-Generated Headlines",
-    fontsize=14,
+    fontsize=18,
     pad=20,
 )
-plt.xlabel("Proportion of LLM Headlines Selected", fontsize=12)
-plt.ylabel("Density", fontsize=12)
+plt.xlabel("Proportion of LLM Headlines Selected", fontsize=16)
+plt.ylabel("Participants", fontsize=16)
 
 # Set x-axis limit to cap at 100%
 plt.xlim(0, 1.0)
 
-# Format x-axis as percentages
+# Format x-axis with decile ticks
+decile_ticks = np.arange(0, 1.1, 0.1)
+plt.xticks(decile_ticks, fontsize=14)
+plt.yticks(fontsize=14)
 plt.gca().xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: "{:.0%}".format(x)))
 
-# Add legend
-plt.legend(loc="upper left")
+# Add legend with larger font
+plt.legend(loc="upper left", fontsize=14)
 
 # Add a text box with summary statistics
 stats_text = (
@@ -88,6 +86,7 @@ plt.text(
     verticalalignment="top",
     horizontalalignment="right",
     bbox=dict(boxstyle="round", facecolor="white", alpha=0.8),
+    fontsize=14,
 )
 
 # Adjust layout and display
