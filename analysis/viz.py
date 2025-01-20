@@ -30,14 +30,15 @@ df["proportion_generated"] = df.preference.apply(
     lambda x: sum([1 for y in x if y == "Generated"]) / len(x)
 )
 
+# Convert proportions to counts
+selection_counts = (df["proportion_generated"] * 5).astype(int)
 
 # Set the style for a clean, modern look
 # plt.style.use("seaborn")
 sns.set_palette("husl")
 
 # Generate sample data based on the paper's findings
-proportion_generated = df["proportion_generated"]
-n_participants = len(proportion_generated)
+n_participants = len(selection_counts)
 
 # Create figure with specified size
 plt.figure(figsize=(12, 6))
@@ -45,38 +46,28 @@ plt.figure(figsize=(12, 6))
 # Set larger font sizes globally
 plt.rcParams.update({"font.size": 14})
 
-# Create the main distribution plot
-sns.histplot(
-    proportion_generated,
-)
+# Create the bar plot
+sns.countplot(x=selection_counts, order=range(6))
 
 # Customize the plot
 plt.title(
-    "Distribution of Reader Preferences for LLM-Generated Headlines",
+    "Distribution of LLM-Generated Headline Selections",
     fontsize=18,
     pad=20,
 )
-plt.xlabel("Proportion of LLM Headlines Selected", fontsize=16)
-plt.ylabel("Participants", fontsize=16)
+plt.xlabel("Number of LLM Headlines Selected (out of 5)", fontsize=16)
+plt.ylabel("Number of Participants", fontsize=16)
 
-# Set x-axis limit to cap at 100%
-plt.xlim(0, 1.0)
-
-# Format x-axis with decile ticks
-decile_ticks = np.arange(0, 1.1, 0.1)
-plt.xticks(decile_ticks, fontsize=14)
+# Format x-axis with proper labels
+plt.xticks(range(6), [f"{i} of 5" for i in range(6)], fontsize=14)
 plt.yticks(fontsize=14)
-plt.gca().xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: "{:.0%}".format(x)))
-
-# Add legend with larger font
-plt.legend(loc="upper left", fontsize=14)
 
 # Add a text box with summary statistics
 stats_text = (
     f"n = {n_participants}\n"
-    f"Mean: {np.mean(proportion_generated):.1%}\n"
-    f"Median: {np.median(proportion_generated):.1%}\n"
-    f"Std Dev: {np.std(proportion_generated):.1%}"
+    f"Mean: {np.mean(selection_counts):.1f} of 5\n"
+    f"Median: {np.median(selection_counts):.1f} of 5\n"
+    f"Std Dev: {np.std(selection_counts):.1f}"
 )
 plt.text(
     0.95,
