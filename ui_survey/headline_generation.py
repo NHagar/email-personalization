@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 from pathlib import Path
 
 import duckdb
@@ -21,11 +22,14 @@ with open("./prompts/framing.txt", "r") as f:
 data_path = Path("./data/emails")
 
 newsletter_paths = [
-    data_path / "Arizona and Missouri Will Vote on Abortion in November - The New York Times.csv",
+    data_path
+    / "Arizona and Missouri Will Vote on Abortion in November - The New York Times.csv",
     data_path / "Harris and Trump Battled for the Midwest - The New York Times.csv",
-    data_path / "In Chicago, Obama Aims to Resurrect a Movement - The New York Times.csv",
-    data_path / "Russia Freed Evan Gershkovich in a Major Prisoner Swap - The New York Times.csv",
-    data_path / "Trump’s Pitch to Parents - The New York Times.csv"
+    data_path
+    / "In Chicago, Obama Aims to Resurrect a Movement - The New York Times.csv",
+    data_path
+    / "Russia Freed Evan Gershkovich in a Major Prisoner Swap - The New York Times.csv",
+    data_path / "Trump’s Pitch to Parents - The New York Times.csv",
 ]
 
 
@@ -64,25 +68,26 @@ class HeadlineGenerator:
             .fetch_df()
             .iloc[0, 0]
         )
+        self.day_of_week = datetime.strptime(
+            self.newsletter_items.publication_date[0], "%b. %d, %Y"
+        ).strftime("%A")
 
     def rank_items(self):
-        format_input = (
-            f"""USER NOTES: {self.user_annotations}
+        format_input = f"""USER NOTES: {self.user_annotations}
             
             CANDIDATE STORIES: {"\n".join(self.newsletter_items.formatted.tolist())}"""
-        )
         messages = [
             {"role": "system", "content": prompt_ranking},
             {"role": "user", "content": format_input},
         ]
-        resp = llm.chat.completions.create(
-            model="gpt-4o", messages=messages, stop="3."
-        )
+        resp = llm.chat.completions.create(model="gpt-4o", messages=messages, stop="3.")
 
         return resp.choices[0].message.content
 
     def generate_heading(self):
-        format_input = f"""STORIES: {self.rank_items()}"""
+        format_input = f"""STORIES: {self.rank_items()}
+            
+            DAY OF WEEK: {self.day_of_week}"""
         messages = [
             {"role": "system", "content": prompt_framing},
             {"role": "user", "content": format_input},

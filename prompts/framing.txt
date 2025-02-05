@@ -3,6 +3,7 @@ Write a headline and sub-hed for an email newsletter that will entice the reader
 You will be supplied with:
 - Reader preferences (topics, tones, specific interests).
 - Stories to include in the headline and sub-hed.
+- The day of the week.
 
 Use this information to craft:
 1. A compelling headline that conforms to the publication's house style, making the top story the focus.
