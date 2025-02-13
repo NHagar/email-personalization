@@ -83,6 +83,7 @@ else:
         progress_bar = st.progress(0.0, progress_text)
 
         hg = HeadlineGenerator([k for k, v in st.session_state.selections.items() if v])
+        hg.infer_interests()
         for i, p in enumerate(newsletter_paths[:5]):
             hg.load_newsletter(p)
             original = hg.original_heading

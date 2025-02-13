@@ -42,16 +42,23 @@ class HeadlineResponse(BaseModel):
 class HeadlineGenerator:
     def __init__(self, items_read) -> None:
         self.items_read = items_read
+        self.prompt_history = prompt_history
+        self.prompt_ranking = prompt_ranking
+        self.prompt_framing = prompt_framing
 
-        personalization_input_format = (
+        self.model = "gpt-4o"
+
+        self.personalization_input_format = (
             f"""USER READING HISTORY: {"\n".join(self.items_read)}"""
         )
+
+    def infer_interests(self):
         messages = [
-            {"role": "system", "content": prompt_history},
-            {"role": "user", "content": personalization_input_format},
+            {"role": "system", "content": self.prompt_history},
+            {"role": "user", "content": self.personalization_input_format},
         ]
         resp = llm.chat.completions.create(
-            model="gpt-4o",
+            model=self.model,
             messages=messages,
         )
         self.user_annotations = resp.choices[0].message.content
@@ -77,10 +84,12 @@ class HeadlineGenerator:
             
             CANDIDATE STORIES: {"\n".join(self.newsletter_items.formatted.tolist())}"""
         messages = [
-            {"role": "system", "content": prompt_ranking},
+            {"role": "system", "content": self.prompt_ranking},
             {"role": "user", "content": format_input},
         ]
-        resp = llm.chat.completions.create(model="gpt-4o", messages=messages, stop="3.")
+        resp = llm.chat.completions.create(
+            model=self.model, messages=messages, stop="3."
+        )
 
         return resp.choices[0].message.content
 
@@ -89,11 +98,11 @@ class HeadlineGenerator:
             
             DAY OF WEEK: {self.day_of_week}"""
         messages = [
-            {"role": "system", "content": prompt_framing},
+            {"role": "system", "content": self.prompt_framing},
             {"role": "user", "content": format_input},
         ]
         resp = llm.beta.chat.completions.parse(
-            model="gpt-4o", messages=messages, response_format=HeadlineResponse
+            model=self.model, messages=messages, response_format=HeadlineResponse
         )
 
         resp_data = json.loads(resp.choices[0].message.content)
