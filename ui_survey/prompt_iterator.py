@@ -22,6 +22,7 @@ headlines_selected = st.multiselect(
 )
 
 generator = HeadlineGenerator(headlines_selected)
+generator.model = "gpt-4o-mini"
 
 prompt_summary = st.text_area(
     "User interest summary prompt", value=generator.prompt_history, height=250
@@ -57,11 +58,20 @@ steps = st.pills(
 
 if st.button("Generate outputs"):
     if "Infer interests" in steps:
+        generator.prompt_history = prompt_summary
+
         generator.infer_interests()
-        st.write("User interests inferred")
+        st.write("User interests inferred:")
+        st.write(generator.user_annotations)
     if "Rank items" in steps:
-        generator.rank_items()
-        st.write("Items ranked")
+        generator.prompt_ranking = prompt_ranking
+
+        ranked_items = generator.rank_items()
+        st.write("Items ranked:")
+        st.write(ranked_items)
     if "Write headlines" in steps:
-        generator.write_headlines()
-        st.write("Headlines written")
+        generator.prompt_framing = prompt_headline_writing
+
+        generated_heading = generator.generate_heading()
+        st.write("Headlines written:")
+        st.write(generated_heading)
