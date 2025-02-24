@@ -24,6 +24,11 @@ headlines_selected = st.multiselect(
 generator = HeadlineGenerator(headlines_selected)
 generator.model = "gpt-4o-mini"
 
+temperature = st.slider(
+    "Model temperature", min_value=0.0, max_value=2.0, value=0.7, step=0.1
+)
+generator.temperature = temperature
+
 prompt_summary = st.text_area(
     "User interest summary prompt", value=generator.prompt_history, height=250
 )

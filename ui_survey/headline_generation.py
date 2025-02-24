@@ -47,6 +47,7 @@ class HeadlineGenerator:
         self.prompt_framing = prompt_framing
 
         self.model = "gpt-4o"
+        self.temperature = 0.7  # Add temperature parameter
 
         self.personalization_input_format = (
             f"""USER READING HISTORY: {"\n".join(self.items_read)}"""
@@ -62,6 +63,7 @@ class HeadlineGenerator:
         resp = llm.chat.completions.create(
             model=self.model,
             messages=messages,
+            temperature=self.temperature,  # Add temperature
         )
         self.user_annotations = resp.choices[0].message.content
 
@@ -90,7 +92,10 @@ class HeadlineGenerator:
             {"role": "user", "content": format_input},
         ]
         resp = llm.chat.completions.create(
-            model=self.model, messages=messages, stop="3."
+            model=self.model,
+            messages=messages,
+            stop="3.",
+            temperature=self.temperature,  # Add temperature
         )
 
         return resp.choices[0].message.content
@@ -104,7 +109,10 @@ class HeadlineGenerator:
             {"role": "user", "content": format_input},
         ]
         resp = llm.beta.chat.completions.parse(
-            model=self.model, messages=messages, response_format=HeadlineResponse
+            model=self.model,
+            messages=messages,
+            response_format=HeadlineResponse,
+            temperature=self.temperature,  # Add temperature
         )
 
         resp_data = json.loads(resp.choices[0].message.content)
