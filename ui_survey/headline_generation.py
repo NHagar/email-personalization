@@ -52,6 +52,8 @@ class HeadlineGenerator:
             f"""USER READING HISTORY: {"\n".join(self.items_read)}"""
         )
 
+        self.user_annotations = ""
+
     def infer_interests(self):
         messages = [
             {"role": "system", "content": self.prompt_history},
