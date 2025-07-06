@@ -62,7 +62,7 @@ class HeadlineGenerator:
         ]
         resp = llm.chat.completions.create(
             model=self.model,
-            messages=messages,
+            messages=messages,  # type: ignore
             temperature=self.temperature,  # Add temperature
         )
         self.user_annotations = resp.choices[0].message.content
@@ -93,7 +93,7 @@ class HeadlineGenerator:
         ]
         resp = llm.chat.completions.create(
             model=self.model,
-            messages=messages,
+            messages=messages,  # type: ignore
             stop="3.",
             temperature=self.temperature,  # Add temperature
         )
@@ -110,12 +110,12 @@ class HeadlineGenerator:
         ]
         resp = llm.beta.chat.completions.parse(
             model=self.model,
-            messages=messages,
+            messages=messages,  # type: ignore
             response_format=HeadlineResponse,
             temperature=self.temperature,  # Add temperature
         )
 
-        resp_data = json.loads(resp.choices[0].message.content)
+        resp_data = json.loads(resp.choices[0].message.content)  # type: ignore
         output = f"""#### {resp_data["headline"]}\n**{resp_data["subhed"]}**"""
 
         return output
