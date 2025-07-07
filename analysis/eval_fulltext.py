@@ -7,6 +7,7 @@ Processes 30 user annotations across all 5 newsletters and calculates accuracy r
 import json
 import random
 import string
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Dict, List, Tuple
 
@@ -248,15 +249,84 @@ FULL ARTICLE TEXT: {item_fulltext}"""
     return eval_result.output_parsed
 
 
+def process_user_newsletter_combination(
+    user_idx: int,
+    user_annotation: str,
+    newsletter_path: Path,
+    fulltext: pd.DataFrame,
+    prompts: Tuple[str, str, str],
+) -> List[Dict]:
+    """Process a single user annotation with a single newsletter."""
+    prompt_rank, prompt_write, prompt_accuracy = prompts
+    client = OpenAI()
+    con = duckdb.connect(database=":memory:")
+
+    results = []
+    newsletter_name = newsletter_path.stem
+
+    try:
+        # Process newsletter
+        stories, day_of_week = process_newsletter(con, newsletter_path)
+
+        # Rank stories
+        rankings = rank_stories(client, user_annotation, stories, prompt_rank)
+
+        # Generate headlines
+        headlines = generate_headlines(
+            client, stories, rankings, day_of_week, prompt_write
+        )
+
+        # Evaluate both ranked items
+        for item_id in [rankings["rank1_id"], rankings["rank2_id"]]:
+            item_fulltext = map_id_to_fulltext(item_id, stories, fulltext)
+
+            # Match the correct generated content to the ranked item
+            if item_id == rankings["rank1_id"]:
+                generated_content = headlines["headline"]
+            else:  # item_id == rankings["rank2_id"]
+                generated_content = headlines["subhed"]
+
+            accuracy_eval = evaluate_accuracy(
+                client, generated_content, item_fulltext, prompt_accuracy
+            )
+
+            results.append(
+                {
+                    "user_idx": user_idx,
+                    "newsletter": newsletter_name,
+                    "item_id": item_id,
+                    "accuracy_rating": accuracy_eval.accuracy_rating,
+                    "reasoning": accuracy_eval.reasoning,
+                    "issue_category": accuracy_eval.issue_category,
+                }
+            )
+
+    except Exception as e:
+        # Return error info instead of empty list
+        results.append(
+            {
+                "user_idx": user_idx,
+                "newsletter": newsletter_name,
+                "item_id": "ERROR",
+                "accuracy_rating": "ERROR",
+                "reasoning": str(e),
+                "issue_category": "ERROR",
+            }
+        )
+    finally:
+        con.close()
+
+    return results
+
+
 def main():
     """Main evaluation function."""
     # Setup
     random.seed(42)  # For reproducibility
     con = duckdb.connect(database=":memory:")
-    client = OpenAI()
 
     # Load data and prompts
-    prompt_rank, prompt_write, prompt_accuracy = load_prompts()
+    prompts = load_prompts()
     fulltext = pd.read_csv("./data/nyt_fulltext.csv", usecols=["url", "text"])
     newsletter_paths = get_newsletter_paths()
 
@@ -267,53 +337,61 @@ def main():
     # Initialize results tracker
     results = EvaluationResult()
 
-    # Process each user annotation with each newsletter
-    total_combinations = len(user_annotations) * len(newsletter_paths)
-    
-    with tqdm(total=total_combinations, desc="Processing combinations") as pbar:
-        for user_idx, user_annotation in enumerate(user_annotations):
-            for newsletter_path in newsletter_paths:
-                newsletter_name = newsletter_path.stem
-                pbar.set_description(f"User {user_idx + 1}/{len(user_annotations)} - {newsletter_name}")
+    # Create all combinations to process
+    combinations = []
+    for user_idx, user_annotation in enumerate(user_annotations):
+        for newsletter_path in newsletter_paths:
+            combinations.append((user_idx, user_annotation, newsletter_path))
+
+    total_combinations = len(combinations)
+    print(f"Processing {total_combinations} combinations with concurrent workers...")
+
+    # Process combinations concurrently
+    max_workers = min(4, total_combinations)  # Limit concurrent workers
+
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        # Submit all tasks
+        future_to_combo = {
+            executor.submit(
+                process_user_newsletter_combination,
+                user_idx,
+                user_annotation,
+                newsletter_path,
+                fulltext,
+                prompts,
+            ): (user_idx, newsletter_path.stem)
+            for user_idx, user_annotation, newsletter_path in combinations
+        }
+
+        # Process completed tasks with progress bar
+        with tqdm(total=total_combinations, desc="Processing combinations") as pbar:
+            for future in as_completed(future_to_combo):
+                user_idx, newsletter_name = future_to_combo[future]
 
                 try:
-                    # Process newsletter
-                    stories, day_of_week = process_newsletter(con, newsletter_path)
+                    combination_results = future.result()
 
-                    # Rank stories
-                    rankings = rank_stories(client, user_annotation, stories, prompt_rank)
-
-                    # Generate headlines
-                    headlines = generate_headlines(
-                        client, stories, rankings, day_of_week, prompt_write
-                    )
-
-                    # Evaluate both ranked items
-                    for item_id in [rankings["rank1_id"], rankings["rank2_id"]]:
-                        item_fulltext = map_id_to_fulltext(item_id, stories, fulltext)
-
-                        # Match the correct generated content to the ranked item
-                        if item_id == rankings["rank1_id"]:
-                            generated_content = headlines["headline"]
-                        else:  # item_id == rankings["rank2_id"]
-                            generated_content = headlines["subhed"]
-
-                        accuracy_eval = evaluate_accuracy(
-                            client, generated_content, item_fulltext, prompt_accuracy
-                        )
-
-                        results.add_result(
-                            user_idx=user_idx,
-                            newsletter_name=newsletter_name,
-                            item_id=item_id,
-                            accuracy_rating=accuracy_eval.accuracy_rating,
-                            reasoning=accuracy_eval.reasoning,
-                            issue_category=accuracy_eval.issue_category,
-                        )
+                    # Add results to tracker
+                    for result in combination_results:
+                        if result["accuracy_rating"] != "ERROR":
+                            results.add_result(
+                                user_idx=result["user_idx"],
+                                newsletter_name=result["newsletter"],
+                                item_id=result["item_id"],
+                                accuracy_rating=result["accuracy_rating"],
+                                reasoning=result["reasoning"],
+                                issue_category=result["issue_category"],
+                            )
+                        else:
+                            tqdm.write(
+                                f"Error processing User {user_idx + 1} - {newsletter_name}: {result['reasoning']}"
+                            )
 
                 except Exception as e:
-                    tqdm.write(f"Error processing User {user_idx + 1} - {newsletter_name}: {e}")
-                    continue
+                    tqdm.write(
+                        f"Error processing User {user_idx + 1} - {newsletter_name}: {e}"
+                    )
+
                 finally:
                     pbar.update(1)
 
