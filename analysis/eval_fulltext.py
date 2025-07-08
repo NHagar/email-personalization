@@ -126,24 +126,40 @@ def sample_user_annotations(
 def get_newsletter_paths() -> List[Path]:
     """Get paths to all newsletter files."""
     data_path = Path("./data/emails")
-    return [
-        data_path
-        / "Arizona and Missouri Will Vote on Abortion in November - The New York Times.csv",
-        data_path / "Harris and Trump Battled for the Midwest - The New York Times.csv",
-        data_path
-        / "In Chicago, Obama Aims to Resurrect a Movement - The New York Times.csv",
-        data_path
-        / "Russia Freed Evan Gershkovich in a Major Prisoner Swap - The New York Times.csv",
-        data_path / "Trump's Pitch to Parents - The New York Times.csv",
+    
+    # Use the actual file names from the directory listing
+    newsletter_files = [
+        "Arizona and Missouri Will Vote on Abortion in November - The New York Times.csv",
+        "Harris and Trump Battled for the Midwest - The New York Times.csv", 
+        "In Chicago, Obama Aims to Resurrect a Movement - The New York Times.csv",
+        "Russia Freed Evan Gershkovich in a Major Prisoner Swap - The New York Times.csv",
+        "Trump's Pitch to Parents - The New York Times.csv",
     ]
+    
+    newsletter_paths = []
+    for filename in newsletter_files:
+        path = data_path / filename
+        if path.exists():
+            newsletter_paths.append(path)
+        else:
+            print(f"Warning: Newsletter file not found: {path}")
+    
+    return newsletter_paths
 
 
 def process_newsletter(
     con: duckdb.DuckDBPyConnection, newsletter_path: Path
 ) -> Tuple[pd.DataFrame, str]:
     """Process a single newsletter to get stories and day of week."""
+    # Check if file exists first
+    if not newsletter_path.exists():
+        raise FileNotFoundError(f"Newsletter file not found: {newsletter_path}")
+    
+    # Escape single quotes by doubling them
+    escaped_path = str(newsletter_path).replace("'", "''")
+    
     stories = con.execute(
-        f"SELECT 'HEADLINE: ' || headline || '\n\nDESCRIPTION: ' || description AS newsletter_item, url FROM '{newsletter_path}' WHERE headline != 'SKIP' "
+        f"SELECT 'HEADLINE: ' || headline || '\n\nDESCRIPTION: ' || description AS newsletter_item, url FROM '{escaped_path}' WHERE headline != 'SKIP' "
     ).fetchdf()
 
     # Add alphabetical letter ID for each item
@@ -153,7 +169,7 @@ def process_newsletter(
     )
 
     day_of_week = pd.to_datetime(
-        con.execute(f"SELECT publication_date FROM '{newsletter_path}' LIMIT 1")
+        con.execute(f"SELECT publication_date FROM '{escaped_path}' LIMIT 1")
         .fetchdf()
         .publication_date.iloc[0]
     ).day_name()
@@ -187,19 +203,43 @@ CANDIDATE STORIES: {"\n".join(stories.newsletter_item.tolist())}"""
     return json.loads(content)
 
 
-def generate_headlines(
+def generate_headlines_for_story(
     client: OpenAI,
-    stories: pd.DataFrame,
-    rankings: dict,
+    story_item: str,
     day_of_week: str,
     prompt_write: str,
 ) -> dict:
-    """Generate headlines for ranked stories."""
-    items_for_rewrite = stories[
-        stories.item_id.isin([rankings["rank1_id"], rankings["rank2_id"]])
-    ].newsletter_item.tolist()
+    """Generate headlines for a single story using description."""
+    format_input = f"""STORIES: {story_item}
+DAY OF WEEK: {day_of_week}
+"""
 
-    format_input = f"""STORIES: {"\n".join(items_for_rewrite)}
+    messages = [
+        {"role": "system", "content": prompt_write},
+        {"role": "user", "content": format_input},
+    ]
+
+    resp = client.beta.chat.completions.parse(
+        model="gpt-4o",
+        messages=messages,  # type: ignore
+        temperature=0.7,
+        response_format=HeadlineResponse,
+    )
+
+    content = resp.choices[0].message.content
+    if content is None:
+        raise ValueError("No content received from headline generation API")
+    return json.loads(content)
+
+
+def generate_headlines_from_fulltext(
+    client: OpenAI,
+    fulltext: str,
+    day_of_week: str,
+    prompt_write: str,
+) -> dict:
+    """Generate headlines for a single story using full article text."""
+    format_input = f"""STORIES: {fulltext}
 DAY OF WEEK: {day_of_week}
 """
 
@@ -225,8 +265,17 @@ def map_id_to_fulltext(
     item_id: str, stories: pd.DataFrame, fulltext: pd.DataFrame
 ) -> str:
     """Map item ID to fulltext."""
-    url = stories[stories.item_id == item_id].url.iloc[0]
-    return fulltext[fulltext.url == url].text.iloc[0]
+    item_rows = stories[stories.item_id == item_id]
+    if len(item_rows) == 0:
+        raise ValueError(f"No story found for item_id: {item_id}")
+    
+    url = item_rows.url.iloc[0]
+    matching_fulltext = fulltext[fulltext.url == url]
+    
+    if len(matching_fulltext) == 0:
+        raise ValueError(f"No fulltext found for URL: {url}")
+    
+    return matching_fulltext.text.iloc[0]
 
 
 def evaluate_accuracy(
@@ -255,6 +304,7 @@ def process_user_newsletter_combination(
     newsletter_path: Path,
     fulltext: pd.DataFrame,
     prompts: Tuple[str, str, str],
+    use_fulltext: bool = False,
 ) -> List[Dict]:
     """Process a single user annotation with a single newsletter."""
     prompt_rank, prompt_write, prompt_accuracy = prompts
@@ -271,20 +321,25 @@ def process_user_newsletter_combination(
         # Rank stories
         rankings = rank_stories(client, user_annotation, stories, prompt_rank)
 
-        # Generate headlines
-        headlines = generate_headlines(
-            client, stories, rankings, day_of_week, prompt_write
-        )
-
         # Evaluate both ranked items
         for item_id in [rankings["rank1_id"], rankings["rank2_id"]]:
+            # Get fulltext for this story
             item_fulltext = map_id_to_fulltext(item_id, stories, fulltext)
-
-            # Match the correct generated content to the ranked item
-            if item_id == rankings["rank1_id"]:
-                generated_content = headlines["headline"]
-            else:  # item_id == rankings["rank2_id"]
-                generated_content = headlines["subhed"]
+            
+            if use_fulltext:
+                # Generate headlines using full article text
+                headlines = generate_headlines_from_fulltext(
+                    client, item_fulltext, day_of_week, prompt_write
+                )
+            else:
+                # Generate headlines using story description
+                story_item = stories[stories.item_id == item_id].newsletter_item.iloc[0]
+                headlines = generate_headlines_for_story(
+                    client, story_item, day_of_week, prompt_write
+                )
+            
+            # Use the main headline for evaluation
+            generated_content = headlines["headline"]
 
             accuracy_eval = evaluate_accuracy(
                 client, generated_content, item_fulltext, prompt_accuracy
@@ -319,7 +374,7 @@ def process_user_newsletter_combination(
     return results
 
 
-def main():
+def main(use_fulltext: bool = False):
     """Main evaluation function."""
     # Setup
     random.seed(42)  # For reproducibility
@@ -333,6 +388,9 @@ def main():
     # Sample user annotations
     user_annotations = sample_user_annotations(con, 30)
     print(f"Sampled {len(user_annotations)} user annotations")
+    
+    input_type = "fulltext" if use_fulltext else "description"
+    print(f"Using {input_type} for headline generation")
 
     # Initialize results tracker
     results = EvaluationResult()
@@ -359,6 +417,7 @@ def main():
                 newsletter_path,
                 fulltext,
                 prompts,
+                use_fulltext,
             ): (user_idx, newsletter_path.stem)
             for user_idx, user_annotation, newsletter_path in combinations
         }
@@ -415,8 +474,9 @@ def main():
 
     # Save detailed results
     results_df = pd.DataFrame(results.results)
-    results_df.to_csv("./data/evaluation_results.csv", index=False)
-    print("\nDetailed results saved to ./data/evaluation_results.csv")
+    output_filename = f"./data/evaluation_results_{'fulltext' if use_fulltext else 'description'}.csv"
+    results_df.to_csv(output_filename, index=False)
+    print(f"\nDetailed results saved to {output_filename}")
 
     # Summary statistics
     print("\nSummary Statistics:")
@@ -429,4 +489,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+    
+    use_fulltext = len(sys.argv) > 1 and sys.argv[1] == "--fulltext"
+    main(use_fulltext=use_fulltext)
